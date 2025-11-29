@@ -163,3 +163,11 @@ Deploy via Unison Cloud using generated deploy functions in `app-main.u`.
 ### Testing Guide
 
 @.claude/commands/testing.md - How to write and organize tests in Unison
+
+### Example app
+
+@.claude/skills/app-architecture-example
+
+### Templates
+
+@.claude/templates/

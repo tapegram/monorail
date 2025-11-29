@@ -18,30 +18,31 @@ Unison flavor and a strong testing story.
 # High-Level Structure
 
 app/
-
 routes/
-\*.u -- URL routing definitions
-
+_.u -- URL routing definitions
 controllers/
-\*.u -- "thin" request handlers that call services
-
+_.u -- "thin" request handlers that call services
 pages/
-\*.u -- HTML page builders (semantic + Pico + htmx)
-
+_.u -- HTML page builders (semantic + Pico + htmx)
+components/
+_.u -- HTML components which are used to build pages or to be returned from routes as partials.
 services/
-\*.u -- all business logic; primary testing target
-
+_.u -- all business logic; primary testing target
 domain/
-\*.u -- domain types, invariants, helpers
-
+_.u -- domain types, invariants, helpers
 ports/
-\*.u -- ability definitions (repositories, clients)
-
+_.u -- ability definitions (repositories, clients)
 adapters/
 storage/
 _.u -- OrderedTable / Database adapters
 http/
 _.u -- Http ability adapters for API clients
+deploy/
+_.u -- deploy functions and related infra
+main/
+_.u -- main.main where the app and anything else needed is composed together to be used by deploys
+web/
+_.u -- generic functions representing web concepts, such as a page, form utilities, etc.
 
 ---
 

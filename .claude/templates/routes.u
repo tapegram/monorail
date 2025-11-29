@@ -1,0 +1,27 @@
+-- routes.u
+
+examples.routes : '{Route, Log, Exception} ()
+examples.routes =
+  getExamples = do
+    _ = Route.noCapture GET (Parser.s "examples")
+    todo "Get all examples"
+    p [] [text "render them as html"] |> toText |> ok.html
+  postExamples = do
+    _ = Route.noCapture POST (Parser.s "examples")
+    formData = getFormData()
+    todo "Parse out form data, save, and return something"
+    p [] [text "done"] |> toText |> ok.html
+  getExample= do
+    exampleId = route GET (Parser.s "examples" / Parser.text)
+    todo "Get a single example using the id"
+    p [] [text "render it as html"] |> toText |> ok.html
+  postExample= do
+    exampleId = route POST (Parser.s "examples" / Parser.text)
+    formData = getFormData()
+    todo "Parse out form data, save, and return something"
+    p [] [text "done"] |> toText |> ok.html
+  deleteExample= do
+    exampleId = route DELETE (Parser.s "examples" / Parser.text)
+    todo "Delete a single example using the id"
+    p [] [text "done"] |> toText |> ok.html
+  getExamples <|> postExamples <|> getExample <|> postExample <|> deleteExample
