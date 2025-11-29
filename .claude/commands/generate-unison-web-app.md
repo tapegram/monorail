@@ -32,7 +32,6 @@ Install the required libraries from Unison Share:
 ```
 lib.install @unison/http
 lib.install @unison/json
-lib.install @unison/base
 ```
 
 Additional optional dependencies based on app needs:
