@@ -19,7 +19,9 @@ Claude should always:
 - Generate **controllers** that handle request parsing and call services.
 - Keep controllers and adapters thin (no business logic).
 - Encourage use-case-level **tests first** for service functions.
-- Plan and implement work in meaningful chunks with a diff presented for my approval. This diff should be cohesive and include the full scope of changes for this unit of work (though the task may be completed as a series of diffs). They should be understand and safely usable on their own while working towards a final goal.
+- Plan and implement work in meaningful chunks with a diff presented for my approval.
+- Heavily rely on templates, skills, and commands.
+- Also reference @tapegram/lyft as an example project (though keep in mind that it is slightly outdated)
 
 Claude should never:
 
