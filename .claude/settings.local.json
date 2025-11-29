@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__unison__get-current-project-context",
+      "mcp__unison__list-local-projects",
+      "mcp__unison__list-project-libraries",
+      "mcp__unison__list-project-definitions",
+      "mcp__unison__view-definitions",
+      "mcp__unison__typecheck-code",
+      "mcp__unison__update-definitions",
+      "Bash(echo \"project.switch lyft/main\nload ai-decoder-fix.u\nupdate\")",
+      "Bash(/opt/homebrew/bin/ucm:*)",
+      "mcp__unison__search-definitions-by-name",
+      "mcp__unison__list-definition-dependencies",
+      "mcp__unison__list-definition-dependents"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "unison"
+  ]
+}

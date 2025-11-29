@@ -1,0 +1,9 @@
+-- service.u
+
+-- Example skeleton service
+
+app.services.MyService.doThing :
+  Input ->
+  {MyRepository} Output
+app.services.MyService.doThing input =
+  todo "Implement business logic here (TDD-first)"

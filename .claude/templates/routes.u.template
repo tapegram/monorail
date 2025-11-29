@@ -1,0 +1,16 @@
+-- routes.u
+
+app.routes : Database -> '{Route, Log} ()
+app.routes db =
+  use Parser / s
+  use Route <|>
+
+  home = do
+    _ = route GET (s "")
+    ok.html (page.full (HomePage.view))
+
+  healthcheck = do
+    _ = route GET (s "healthz")
+    ok.text "ok"
+
+  home <|> healthcheck

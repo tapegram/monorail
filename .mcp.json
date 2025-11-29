@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"unison": {
+			"type": "stdio",
+			"command": "/opt/homebrew/bin/ucm",
+			"args": ["mcp"]
+		}
+	}
+}

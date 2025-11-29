@@ -1,0 +1,7 @@
+-- repository-ability.u
+
+ability MyEntityRepository where
+  get     : Text ->{MyEntityRepository} (Optional MyEntity)
+  listAll : '{MyEntityRepository} [MyEntity]
+  upsert  : MyEntity ->{MyEntityRepository} ()
+  delete  : Text ->{MyEntityRepository} ()

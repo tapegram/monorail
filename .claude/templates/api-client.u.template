@@ -1,0 +1,28 @@
+-- api-client.u
+
+ability Api where
+  getThing : '{Api} Thing
+
+Api.run : Text -> '{g, Api} a -> {g, Http, Exception} a
+Api.run baseUrl p =
+  go : '{g, Api} a -> {g, Http, Exception} a
+  go p = handle !p with cases
+    {getThing -> resume} ->
+      uri =
+        fromPath (root / "thing")
+          |> URI.https
+          |> URI.withHost baseUrl
+
+      resp = HttpRequest.get uri
+             |> HttpRequest.addHeader "Content-Type" "application/json"
+             |> Http.request
+
+      _ = ensureSuccess resp
+      body = HttpResponse.bodyText resp
+      thing = Thing.decode body
+
+      go '(resume thing)
+
+    {k} -> k
+
+  go p

@@ -1,0 +1,22 @@
+-- page-layout.u
+
+page.full : Html -> Html
+page.full content =
+  html
+    [ lang "en" ]
+    [ head
+        []
+        [ title [] [ text "Unison App" ]
+        , link
+            [ rel "stylesheet"
+            , href "https://unpkg.com/@picocss/pico@latest/css/pico.classless.min.css"
+            ]
+            []
+        , script [ src "https://unpkg.com/htmx.org@1.9.12" ] []
+        ]
+    , body_ []
+        [ main_ [] [ content ] ]
+    ]
+
+page.partial : Html -> Html
+page.partial content = content
