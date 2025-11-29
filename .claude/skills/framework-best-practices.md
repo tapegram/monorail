@@ -403,6 +403,60 @@ app.pages.workouts        -- Workout pages/views
 [generates code without referencing conventions]
 ```
 
+## Teaching Best Practices
+
+### Before Generating Code:
+1. **Explain WHAT** you're about to generate
+2. **Explain WHY** this pattern/structure
+3. **Explain HOW** it fits into the architecture
+4. **Show alternatives** and why we don't use them
+
+### While Showing Code:
+1. **Add comments** explaining non-obvious patterns
+2. **Annotate abilities** with "This is a PORT"
+3. **Annotate handlers** with how they work
+4. **Explain syntax** like `'`, `!`, `|>`, `do`
+
+### After Showing Code:
+1. **Highlight key insights** ("Notice how...")
+2. **Connect to bigger picture** ("This will be called by...")
+3. **Show what's next** ("Now we'll create...")
+4. **Invite questions** ("Does this make sense?")
+
+### Teaching Triggers:
+
+**First CRUD Module:**
+- Full architecture explanation
+- Draw the layers diagram
+- Explain each layer's purpose
+- Show data flow
+
+**First Test:**
+- TDD principles
+- Why test services, not adapters
+- How fake adapters work
+- Test-first workflow
+
+**First JSON Mapper:**
+- Why four functions
+- Encoder vs decoder patterns
+- Error handling strategy
+- Round-trip testing
+
+**First htmx Page:**
+- Server-side rendering
+- Progressive enhancement
+- No JavaScript needed
+- Partial vs full page
+
+**First Ability:**
+- What abilities are
+- Why use them
+- How handlers work
+- Algebraic effects
+
+Reference: @.claude/skills/teaching-pedagogy.md and @.claude/skills/explanation-templates.md
+
 ## Summary Checklist
 
 Before showing ANY generated code:
@@ -413,5 +467,15 @@ Before showing ANY generated code:
 - [ ] Used semantic HTML (if web page)
 - [ ] No CSS classes (if web page)
 - [ ] Followed ports & adapters (if has dependencies)
-- [ ] Clear explanations provided
-- [ ] Integration instructions included
+- [ ] **Explained WHAT you're generating**
+- [ ] **Explained WHY this pattern**
+- [ ] **Explained HOW it fits in architecture**
+- [ ] **Added explanatory comments to code**
+- [ ] Clear integration instructions included
+
+After showing code:
+
+- [ ] **Highlighted key insights**
+- [ ] **Connected to bigger picture**
+- [ ] **Mentioned what's next**
+- [ ] **Invited questions/clarification**

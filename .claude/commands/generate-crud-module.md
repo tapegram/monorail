@@ -13,29 +13,114 @@ Ask the user:
 
 ## Step 2: Create Domain Type
 
+**Teach First:**
+```
+Let's start by defining the domain type - this represents a <Entity> in our system.
+
+## What is a Domain Type?
+
+It's a record that models your business concept. In this case, a <Entity> with:
+- id: Text - We use Text for IDs (will be UUIDs later)
+- [field1]: [Type1] - [explain what this field represents]
+- [field2]: [Type2] - [explain what this field represents]
+
+## Why start with the domain type?
+
+1. It's the CORE of your feature - everything else revolves around it
+2. It's pure data - no dependencies, easy to understand
+3. It drives the design of everything else (ports, services, views)
+
+This is "domain-driven design" - start with the business concept!
+```
+
 Create a new scratch file named `<entity-name>-crud.u` with the domain record:
 
 ```unison
+-- This represents a <Entity> in our system
+-- The id is Text because we'll generate UUIDs for each <entity>
 type <Entity> =
   { id : Text
-  , <field1> : <Type1>
-  , <field2> : <Type2>
+  , <field1> : <Type1>  -- [explain purpose]
+  , <field2> : <Type2>  -- [explain purpose]
   -- ... other fields
   }
+```
+
+**After showing code:**
+```
+Notice:
+- Simple record type - just data, no logic
+- Text ID - we'll generate UUIDs when creating <entities>
+- Clear field names - self-documenting
+
+This is the foundation. Everything else will work with this type!
 ```
 
 Typecheck immediately.
 
 ## Step 3: Generate Repository Port
 
+**Teach First:**
+```
+Now let's create the <Entity>Repository - this is a PORT (ability).
+
+## What is a Port?
+
+A port defines WHAT operations we need, not HOW they work.
+
+Think of it as a contract:
+- "I need to get a <entity> by ID"
+- "I need to list all <entities>"
+- "I need to save a <entity>"
+- "I need to delete a <entity>"
+
+But it DOESN'T say:
+- WHERE <entities> are stored (database? memory? file?)
+- HOW they're stored (SQL? OrderedTable? JSON?)
+
+That's decided by the ADAPTER (coming next), not the port.
+
+## Why use a Port?
+
+1. **Testability**: Services can use a FAKE repository for tests
+2. **Flexibility**: Swap storage (in-memory → database) without changing services
+3. **Clarity**: Services declare exactly what they need
+
+This is the "ports & adapters" architecture!
+```
+
 Add to the scratch file:
 
 ```unison
+-- This is a PORT (ability) - defines WHAT operations we need for <Entity>
+-- The actual implementation (HOW) is decided by the adapter
 ability <Entity>Repository where
+  -- Get a single <entity> by ID
+  -- Returns Optional because the <entity> might not exist
   get     : Text ->{<Entity>Repository} (Optional <Entity>)
+
+  -- Get all <entities>
+  -- Delayed computation (') because it might do I/O
   listAll : '{<Entity>Repository} [<Entity>]
+
+  -- Save (insert or update) a <entity>
+  -- Takes the full <entity> to save
   upsert  : <Entity> ->{<Entity>Repository} ()
+
+  -- Delete a <entity> by ID
   delete  : Text ->{<Entity>Repository} ()
+```
+
+**After showing code:**
+```
+Key insights:
+- get returns Optional - the <entity> might not exist!
+- listAll uses ' (delayed) - will run when forced
+- upsert handles both create AND update
+- All operations use the <Entity>Repository ability
+
+Services will depend on THIS port, not the database directly.
+That's what makes them testable!
 ```
 
 Reference: @.claude/templates/repository-ability.u
@@ -43,6 +128,39 @@ Reference: @.claude/templates/repository-ability.u
 Typecheck.
 
 ## Step 4: Generate Repository Adapter
+
+**Teach First:**
+```
+Now we create the ADAPTER - this is HOW the port is implemented.
+
+## What is an Adapter?
+
+While the port says "I need these operations", the adapter says "Here's how to do them".
+
+For <Entity>Repository, we'll use OrderedTable:
+- A key-value store in Unison Cloud
+- Stores <entities> by their ID
+- Supports read, write, delete operations
+
+## How does a Handler Work?
+
+The pattern:
+1. Define `<Repository>.run` that takes the Database
+2. Create the OrderedTable for storing <entities>
+3. Define an internal `go` function
+4. Pattern match on ability operations
+5. Do the actual work (read/write to OrderedTable)
+6. Resume with the result
+
+The magic: `handle !p with cases` intercepts ability calls!
+
+When a service calls `<Entity>Repository.get id`, this handler:
+1. Intercepts that call
+2. Reads from OrderedTable
+3. Resumes the service with the result
+
+This is "algebraic effects" - Unison's superpower!
+```
 
 Add the adapter using OrderedTable:
 
