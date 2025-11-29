@@ -31,6 +31,7 @@ Install the required libraries from Unison Share:
 
 ```
 lib.install @unison/http
+lib.install @tapegram/html
 lib.install @unison/json
 ```
 
