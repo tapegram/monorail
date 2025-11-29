@@ -1,3 +1,33 @@
+project.delete monorail-docs
+ls
+delete.namespace .
+?
+dependents handler
+view handler
+ls
+ls controllers
+ls3
+ls
+run deploy.stage
+update
+view Route.deploy
+ls
+run deploy.stage
+run deployProd
+update
+lib.install @unison/routes
+lib.install @tapegram/routes
+update
+ls
+update
+lib.install @tapegram/html
+lib.install @unison/cloud
+lib.install @unison/json
+lib.install @unison/json @unison/cloud
+lib.install @unison/http
+ls lib
+ls
+project.create monorail-docs
 push
 update
 reset #ksk0p10nk9vh3uerabls4vb50b8qise7cas7cqddb0m0r0e20gt2ma7a7coid8cgk71pul00ug3o3rhouet5iu2upohht2o9di4441g
@@ -68,33 +98,3 @@ update
 view app.components.NewWorkoutForm
 view app.pages.NewWorkoutPage
 ls app
-ls
-run deploy.deployStage
-update
-edit NewWorkoutForm
-run deploy.deployStage
-update
-run deploy.deployStage
-update
-view NewWorkoutForm
-run deploy.deployStage
-update
-run deploy.deployProd
-push
-update
-run deploy.deployStage
-auth.login
-?
-run deploy.deployStage
-run deployStage
-update
-undo
-?
-patch
-switch lyft
-find deployStage
-find
-pull
-ls main
-ls
-view main.main

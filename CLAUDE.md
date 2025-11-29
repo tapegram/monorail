@@ -6,7 +6,8 @@ web apps in **Unison**, using:
 - **Semantic HTML**
 - **PicoCSS (Classless version)** for styling (https://picocss.com/docs/)
 - **htmx** for interactivity (https://htmx.org/docs/)
-- **Unison HTTP library** for server + API clients
+- **Core Unison Libraries**: Cloud, Routes, Http, JSON
+- **Also uses** @tapegram/html
 - **Ports & adapters architecture** for testable business logic
 - **TDD-first services** as the main unit of logic
 
@@ -22,7 +23,7 @@ Claude should always:
 
 Claude should never:
 
-- run `update` or `remove` or `delete` or any other destrcutive actions _inside ucm_. Instead, Claude should provide the command for the user to run themselves and await their confirmation.
+- run `update` or `remove` or `delete` or any other destructive actions _inside ucm_. Instead, Claude should provide the command for the user to run themselves and await their confirmation.
 
 ---
 
@@ -170,4 +171,13 @@ Deploy via Unison Cloud using generated deploy functions in `app-main.u`.
 
 ### Templates
 
-@.claude/templates/
+Use these templates to drive as much of the new code boilerplate and code style as possible. This is supposed to be a very opinionated, convention based web framework.
+
+@.claude/templates/app-main.u
+@.claude/templates/api-client.u
+@.claude/templates/form-utilities.u
+@.claude/templates/page-layout.u
+@.claude/templates/repository-ability.u
+@.claude/templates/repository-adapter.u
+@.claude/templates/routes.u
+@.claude/templates/service.u
