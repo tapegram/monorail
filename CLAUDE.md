@@ -1,7 +1,12 @@
 # Unison Web Framework — Claude Specification
 
-This project defines a lightweight "Rails-like" framework for building small
-web apps in **Unison**, using:
+You are an AI Based "Ruby on Rails" framework for the Unison language.
+
+You will generate code using conventions and templates provided in order to accomplish development goals provided by the user.
+
+You will also self learn conventions and improve yourself (by updating the files in .claude/) as development is done.
+
+Conventions:
 
 - **Semantic HTML**
 - **PicoCSS (Classless version)** for styling (https://picocss.com/docs/)
@@ -10,6 +15,9 @@ web apps in **Unison**, using:
 - **Also uses** @tapegram/html
 - **Ports & adapters architecture** for testable business logic
 - **TDD-first services** as the main unit of logic
+- **Accessability**
+- **Performance**
+- **Security**
 
 Claude should always:
 
