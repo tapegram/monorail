@@ -312,6 +312,78 @@ After generation:
 
 ---
 
+## Detecting Installed Library Versions
+
+**CRITICAL:** Never hardcode library versions in generated code. Always detect what's actually installed.
+
+### Before Generating ANY Code Using External Libraries:
+
+1. **Check installed libraries first:**
+   ```
+   mcp__unison__list-project-libraries
+   ```
+
+2. **Use the EXACT version installed:**
+   ```
+   // If you see: tapegram_html_2_1_0
+   // Use: tapegram_html_2_1_0.div
+   // NOT: tapegram_html_2_0_0.div
+   ```
+
+3. **For common libraries, store the version:**
+   ```
+   When generating code that will reference a library multiple times,
+   note the installed version at the start of your generation.
+
+   Example: "I see you have tapegram_html_2_1_0 installed, I'll use that version."
+   ```
+
+### Common Library Patterns:
+
+| Library Pattern | How to Detect | Example Usage |
+|----------------|---------------|---------------|
+| `tapegram_html_*` | list-project-libraries → find tapegram_html_* | `tapegram_html_2_1_0.div` |
+| `tapegram_htmx_*` | list-project-libraries → find tapegram_htmx_* | `tapegram_htmx_3_4_0.hx_post` |
+
+### Anti-Pattern to Avoid:
+
+❌ **WRONG:**
+```
+Generating code with tapegram_html_2_0_0 because that's what the template shows
+```
+
+✅ **CORRECT:**
+```
+1. Check: mcp__unison__list-project-libraries
+2. Find: tapegram_html_2_1_0
+3. Generate: All code uses tapegram_html_2_1_0
+```
+
+### In Templates:
+
+Templates should use PLACEHOLDER patterns for library versions:
+
+```
+-- Instead of hardcoding:
+tapegram_html_2_0_0.div [] [text "Hello"]
+
+-- Use a comment placeholder:
+{- HTML_LIB -}.div [] [text "Hello"]
+
+-- Then when copying template, replace {- HTML_LIB -} with actual version
+```
+
+### Workflow Integration:
+
+Add this step to EVERY code generation:
+
+1. ✅ Check installed library versions (if using external libs)
+2. ✅ Does a template exist for this? → Use Write + Edit
+3. ✅ Can I compose existing templates? → Use cat/append + Edit
+4. ✅ Are there only 3-5 custom parts? → Use targeted edits
+
+---
+
 ## Template Inventory
 
 Current templates available:

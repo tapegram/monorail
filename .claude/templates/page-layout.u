@@ -1,5 +1,8 @@
 -- page-layout.u
 {{
+IMPORTANT: When copying this template, replace {- HTML_LIB -} with the actual installed
+HTML library version (e.g., tapegram_html_2_1_0). Check using list-project-libraries first!
+
 Pages are conditionally rendered as partials or full pages depending on if the request is partial (e.g., via HTMX) or a full page load.
 }}
 
@@ -17,7 +20,7 @@ web.page.isPartialRequest =
 web.page.page.partial : [Html] -> Html
 web.page.page.partial children =
   use List +:
-  use tapegram_html_2_0_0 div
+  use {- HTML_LIB -} div
   div [] children
 
 web.page.page.full :
@@ -27,7 +30,7 @@ web.page.page.full children =
   use Path /
   use Text != ++
   use html async
-  use tapegram_html_2_0_0 link text
+  use {- HTML_LIB -} link text
   env = Config.expect "env"
   heartbeatUrl = baseUrl() / "heartbeat"
   hotReloadScriptJs =
@@ -36,16 +39,16 @@ web.page.page.full children =
       ++ "'); // change to your actual endpoint\n        if (!response.ok) return;\n    \n        const data = await response.json();\n        const deployedAt = new Date(data.deployedAt);\n    \n        if (deployedAt > pageLoadedAt) {\n          location.reload();\n        }\n      } catch (e) {\n        console.error('Heartbeat check failed:', e);\n      }\n    }\n    \n    setInterval(checkForNewDeploy, 3000);\n    "
   hotReloadScript =
     script [type' "text/javascript"] [unsafeText hotReloadScriptJs]
-  tapegram_html_2_0_0.html
+  {- HTML_LIB -}.html
     []
-    [ tapegram_html_2_0_0.head
+    [ {- HTML_LIB -}.head
         []
         [ meta
             [ Attribute.name "viewport"
             , html.content "width=device-width, initial-scale=1"
             ]
         , lang "en"
-        , tapegram_html_2_0_0.title [] [text "Monorail App"]
+        , {- HTML_LIB -}.title [] [text "Monorail App"]
         , link [rel "preconnect", href "https://fonts.gstatic.com"]
         , link [rel "preconnect", href "https://fonts.googleapis.com"]
         , link [rel "preconnect", href "https://unpkg.com/"]
@@ -62,7 +65,7 @@ web.page.page.full children =
     ]
 
 web.page.css : Html
-web.page.css = tapegram_html_2_0_0.style [] [unsafeText css.raw]
+web.page.css = {- HTML_LIB -}.style [] [unsafeText css.raw]
 
 {{
 This is where all the custom css goes

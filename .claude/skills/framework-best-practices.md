@@ -478,6 +478,222 @@ app.pages.workouts        -- Workout pages/views
 
 Reference: @.claude/skills/teaching-pedagogy.md and @.claude/skills/explanation-templates.md
 
+---
+
+## Routing Best Practices
+
+### Route Ordering is Critical
+
+Routes are matched **in order**. More specific routes MUST come before general ones.
+
+❌ **WRONG (will 404 on toggle):**
+```unison
+index <|> create <|> toggle <|> deleteTask
+-- Problem: 'index' matches /tasks/{anything}, so 'toggle' never matches
+```
+
+✅ **CORRECT:**
+```unison
+toggle <|> deleteTask <|> index <|> create
+-- Specific routes (/tasks/{id}/toggle) before general (/tasks/{id})
+```
+
+**Rule of Thumb:**
+- Routes with more path segments come first
+- Routes with specific strings come before dynamic captures
+- POST/DELETE before GET
+- No-capture routes come last
+
+### Route Handler Structure
+
+Each route handler MUST follow this exact structure:
+
+```unison
+handlerName = do
+  <route matcher>
+  <handler code>
+handlerName  -- IMPORTANT: return the handler
+```
+
+**Example:**
+```unison
+app.routes.home =
+  index = do
+    noCapture GET (Parser.s "")
+    html = app.pages.home()
+    ok.html (toText html)
+  index  -- Return the handler
+```
+
+**Common Mistakes:**
+
+❌ **Missing the return:**
+```unison
+app.routes.home = do
+  noCapture GET (Parser.s "")
+  html = app.pages.home()
+  ok.html (toText html)
+  -- ERROR: No handler returned
+```
+
+❌ **Wrong indentation:**
+```unison
+app.routes.home =
+  index = do
+  noCapture GET (Parser.s "")  -- ERROR: Not indented under 'do'
+  html = app.pages.home()
+  ok.html (toText html)
+  index
+```
+
+### baseUrl() for All Internal URLs
+
+Reference @.claude/skills/baseurl-pattern.md for comprehensive guide.
+
+**Quick Checklist:**
+- [ ] Page uses `'{Route}` in type signature
+- [ ] Page uses `do` syntax
+- [ ] All links use `baseUrl() / "path" |> Path.toText`
+- [ ] All forms use `baseUrl() / "path" |> Path.toText`
+- [ ] All htmx attributes use `baseUrl() / "path" |> Path.toText`
+
+### Ability Propagation in Routes
+
+Routes must declare all abilities used by controllers and services:
+
+```unison
+app.routes : '{Route, Log, Exception, TaskRepository} ()
+app.routes =
+  -- Route handlers can now use TaskRepository
+```
+
+**Handler application happens in main:**
+```unison
+main db req =
+  storage.TaskRepository.run db do
+    Route.run app.routes req
+```
+
+---
+
+## Common Pitfalls and Solutions
+
+### Pitfall 1: Optional.None Scoping Conflicts
+
+**Problem:** The htmx library exports `Option.None` which conflicts with `Optional.None`.
+
+**Solution:** Always add `use Optional None Some` in functions that pattern match on Optional:
+
+```unison
+app.controllers.TaskController.show taskId = do
+  use Optional None Some  -- CRITICAL!
+
+  maybeTask = TaskService.get taskId
+  match maybeTask with
+    Some task -> ok.html (toText (showTask task))
+    None -> notFound.text "Task not found"
+```
+
+### Pitfall 2: Library Version Mismatch
+
+**Problem:** Templates show `tapegram_html_2_0_0` but project has `2_1_0` installed.
+
+**Solution:** ALWAYS check installed libraries FIRST:
+```
+1. Run: mcp__unison__list-project-libraries
+2. Find: tapegram_html_2_1_0
+3. Use: tapegram_html_2_1_0.div (not 2_0_0)
+```
+
+### Pitfall 3: Conditional HTML Attributes
+
+**Problem:** How to conditionally include attributes like `checked`?
+
+**Solution:** Build attribute list conditionally:
+
+```unison
+checkboxAttrs =
+  [ type_ "checkbox"
+  , hx_post toggleUrl
+  ] List.++ (if isCompleted then [checked true] else [])
+
+input checkboxAttrs []
+```
+
+**NOT:**
+```unison
+-- This doesn't work:
+input
+  [ type_ "checkbox"
+  , if isCompleted then checked true else ???  -- Can't do this!
+  ]
+  []
+```
+
+### Pitfall 4: UUID Function Naming
+
+**Problem:** Using `Uuid.newv4()` which doesn't exist.
+
+**Solution:** Use `Uuid.new()`:
+
+```unison
+-- CORRECT:
+id = Uuid.new ()
+
+-- WRONG:
+id = Uuid.newv4()
+```
+
+### Pitfall 5: Ability Handler Application
+
+**Problem:** Using `handle...with` pattern for applying handlers.
+
+**Solution:** Use function application pattern:
+
+❌ **WRONG:**
+```unison
+main db req =
+  handle storage.TaskRepository.run db with
+    Route.run app.routes req
+```
+
+✅ **CORRECT:**
+```unison
+main db req =
+  storage.TaskRepository.run db do
+    Route.run app.routes req
+```
+
+Reference: @.claude/skills/abilities-and-handlers.md for complete guide.
+
+### Pitfall 6: File Accidentally Emptied
+
+**Problem:** Edit operation resulted in 0-byte file.
+
+**Solution:** Use UCM to restore from codebase:
+```
+edit <namespace>
+```
+
+Then use the Edit tool on the restored file.
+
+### Pitfall 7: Naming Readability
+
+**Problem:** Using abbreviated names that are hard to read.
+
+**Solution:** Use descriptive names:
+- `createTaskButton` not `createBtn`
+- `toggleUrl` not `tglUrl`
+- `taskItem` not `taskItm`
+
+**Exception:** Common abbreviations are fine:
+- `id` for identifier
+- `db` for database
+- `req` for request
+- `resp` for response
+
+---
+
 ## Summary Checklist
 
 Before showing ANY generated code:

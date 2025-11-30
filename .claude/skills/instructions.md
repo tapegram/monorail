@@ -32,7 +32,123 @@ As you are iterating, directly edit the file you've created. Use the MCP server 
 
 You can show me excerpts of the scratch file as needed when asking me for help or for review.
 
-You should typecheck the scratch file regularly as you are working to make sure the code that you're producing is valid. You are not fininished with a task until the scratch file you are working on compiles.
+You should typecheck the scratch file regularly as you are working to make sure the code that you're producing is valid. You are not finished with a task until the scratch file you are working on compiles.
+
+## WORKING WITH BRANCHES AND FREQUENT UPDATES
+
+**CRITICAL WORKFLOW RULES:**
+
+### Use Branches for All Work
+
+1. **Never work directly on main**
+   - Create a new branch for each feature/fix
+   - Use descriptive branch names: `feature/task-crud`, `fix/route-ordering`, `add/json-mappers`
+
+2. **Branch Creation Pattern:**
+   ```
+   Bash: ucm project.switch <project>/<new-branch>
+   ```
+   Example: `project.switch HelloWorld/feature/tasks`
+
+3. **When to Create Branches:**
+   - At the start of ANY code generation task
+   - Before making changes to existing code
+   - When experimenting with new features
+
+### Update Frequently
+
+**RULE:** Run `ucm update` after EVERY successful typecheck of a meaningful change.
+
+**Workflow:**
+```
+1. Write/Edit code in scratch file
+2. Typecheck using MCP (must pass)
+3. Run: ucm update
+4. Continue to next change
+5. Repeat
+```
+
+**Why frequent updates?**
+- Prevents losing work if file gets corrupted
+- Allows user to review changes incrementally
+- Makes it easier to rollback specific changes
+- Keeps codebase in sync with your work
+
+**When to Update:**
+- After adding a new definition and it typechecks
+- After editing a definition and it typechecks
+- After fixing a type error
+- Before taking a break or asking user for review
+- Before switching tasks
+
+### Testing Changes with deploy.dev
+
+**After updating code, deploy to dev environment to test:**
+
+```
+Bash: ucm run deploy.deployDev
+```
+
+**This allows:**
+- Testing the app in a real environment
+- Catching runtime issues early
+- Verifying routes work correctly
+- Testing with real data
+
+**Workflow Integration:**
+```
+1. Write code in scratch file
+2. Typecheck (MCP)
+3. Update (ucm update)
+4. Deploy to dev (ucm run deploy.deployDev)
+5. Test in browser
+6. Fix any issues
+7. Repeat
+```
+
+### Merging Back to Main
+
+**After feature is complete and tested:**
+
+1. Ensure all changes are updated on branch
+2. Switch to main: `project.switch <project>/main`
+3. Merge the branch: `merge <branch-name>`
+4. Deploy to stage for final testing: `run deploy.deployStage`
+5. Once approved, deploy to prod: `run deploy.deployProd`
+
+### File Management with UCM
+
+**If a file gets accidentally emptied or corrupted:**
+
+```
+Bash: ucm edit <namespace>
+```
+
+This restores the definitions from the codebase to the file.
+
+**Managing the scratch file with UCM:**
+- You can run `edit` yourself to pull definitions from codebase
+- You can use `update` to save your changes
+- Don't be afraid to use UCM commands directly
+
+### Summary of Critical Workflow
+
+**For EVERY code generation task:**
+
+1. ✅ Create a branch (or verify you're on one)
+2. ✅ Write code in scratch file
+3. ✅ Typecheck using MCP
+4. ✅ Run `ucm update` after each successful typecheck
+5. ✅ Deploy to dev to test (`run deploy.deployDev`)
+6. ✅ Iterate until working
+7. ✅ Ask user to review
+8. ✅ User merges to main when ready
+
+**Never:**
+- ❌ Work directly on main
+- ❌ Skip updates between changes
+- ❌ Deploy to prod without testing in dev/stage first
+- ❌ Forget to update before asking for review
 
 ## DISCOVERY mode instructions
 

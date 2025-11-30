@@ -1,27 +1,55 @@
 -- routes.u
+{{
+IMPORTANT ROUTE HANDLER PATTERN:
 
-examples.routes : '{Route, Log, Exception} ()
+Each route handler MUST follow this structure:
+  handlerName = do
+    <route matcher>
+    <handler code>
+  handlerName  -- return the handler
+
+The route matcher (noCapture or route) opens a block where the handler code goes.
+This is CRITICAL for correct parsing.
+
+Route ordering matters: Put more specific routes BEFORE general ones.
+Example: toggle <|> deleteExample <|> getExample <|> getExamples
+}}
+
+examples.routes : '{Route, Log, Exception, MyRepository} ()
 examples.routes =
   getExamples = do
-    _ = Route.noCapture GET (Parser.s "examples")
-    todo "Get all examples"
-    p [] [text "render them as html"] |> toText |> ok.html
+    noCapture GET (Parser.s "examples")
+    examples = MyService.listAll ()
+    html = app.pages.examples.index examples ()
+    ok.html ({- HTML_LIB -}.toText html)
+
   postExamples = do
-    _ = Route.noCapture POST (Parser.s "examples")
+    noCapture POST (Parser.s "examples")
     formData = getFormData()
-    todo "Parse out form data, save, and return something"
-    p [] [text "done"] |> toText |> ok.html
-  getExample= do
+    -- Parse form data and call service
+    -- example = MyService.create input
+    ok.html ({- HTML_LIB -}.toText (p [] [text "Created"]))
+
+  getExample = do
     exampleId = route GET (Parser.s "examples" / Parser.text)
-    todo "Get a single example using the id"
-    p [] [text "render it as html"] |> toText |> ok.html
-  postExample= do
+    maybeExample = MyService.get exampleId
+    match maybeExample with
+      Some example ->
+        html = app.pages.examples.show example ()
+        ok.html ({- HTML_LIB -}.toText html)
+      None -> notFound.text ("Example " Text.++ exampleId Text.++ " not found")
+
+  postExample = do
     exampleId = route POST (Parser.s "examples" / Parser.text)
     formData = getFormData()
-    todo "Parse out form data, save, and return something"
-    p [] [text "done"] |> toText |> ok.html
-  deleteExample= do
+    -- Parse form data and call service
+    -- updated = MyService.update exampleId input
+    ok.html ({- HTML_LIB -}.toText (p [] [text "Updated"]))
+
+  deleteExample = do
     exampleId = route DELETE (Parser.s "examples" / Parser.text)
-    todo "Delete a single example using the id"
-    p [] [text "done"] |> toText |> ok.html
-  getExamples <|> postExamples <|> getExample <|> postExample <|> deleteExample
+    MyService.delete exampleId
+    ok.text "Deleted"
+
+  -- IMPORTANT: Order matters! More specific routes first
+  getExample <|> postExample <|> deleteExample <|> getExamples <|> postExamples
