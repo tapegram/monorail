@@ -30,13 +30,15 @@ project.switch <app-name>
 Install the required libraries from Unison Share:
 
 ```
-lib.install @unison/http
-lib.install @unison/routes
-lib.install @tapegram/html
-lib.install @tapegram/htmx
-lib.install @unison/json
-lib.install @unison/cloud
+lib.install @unison/http        # HTTP server and request/response handling
+lib.install @unison/routes      # URL routing with Route ability
+lib.install @tapegram/html      # HTML generation library
+lib.install @tapegram/htmx      # htmx helpers and utilities
+lib.install @unison/json        # JSON encoding/decoding
+lib.install @unison/cloud       # Unison Cloud deployment
 ```
+
+**Important:** Both `@tapegram/html` and `@tapegram/htmx` are required for the Monorail web stack (semantic HTML + htmx interactivity).
 
 Additional optional dependencies based on app needs:
 
