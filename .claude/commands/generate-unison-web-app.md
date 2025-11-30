@@ -33,6 +33,7 @@ Install the required libraries from Unison Share:
 lib.install @unison/http
 lib.install @unison/routes
 lib.install @tapegram/html
+lib.install @tapegram/htmx
 lib.install @unison/json
 lib.install @unison/cloud
 ```
