@@ -2,6 +2,27 @@
 
 This guide documents best practices for using Claude as a Rails-like web framework for Unison.
 
+## ⚡ EFFICIENCY FIRST: Code Generation Strategy
+
+**CRITICAL:** Before generating ANY code, read @.claude/skills/efficient-code-generation.md
+
+**The Golden Rule:** Copy templates, make edits, explain concepts separately.
+
+**Implementation:**
+1. Check if a template exists: `.claude/templates/*.u`
+2. If yes → Use Write to copy, Edit to customize
+3. If no → Generate minimal code, explain after
+4. Always separate teaching from code generation
+
+**Token Budget:**
+- Streaming 200 lines of boilerplate: ~2000 tokens
+- Copy template + 5 edits + teaching: ~600 tokens
+- **Savings: 70%**
+
+Use this saved budget for better teaching, more iterations, and deeper problem-solving.
+
+---
+
 ## When to Use Slash Commands
 
 Slash commands are your primary code generation interface. Use them proactively:

@@ -2,6 +2,11 @@
 
 You are generating JSON encoders and decoders for Unison types.
 
+**IMPORTANT:** Follow efficient code generation from @.claude/skills/efficient-code-generation.md
+- Generate encoder/decoder fields programmatically
+- Use targeted edits for customization
+- Minimize streaming boilerplate
+
 ## Step 0: Read JSON Guides
 
 FIRST, read:
@@ -33,70 +38,70 @@ Fields:
 
 ## Step 3: Generate Encoder
 
-Create encoder using `object.empty` and `|>` chaining:
+**EFFICIENT APPROACH:** Build encoder fields programmatically
 
+For each field, generate the appropriate line based on type:
+
+**Generated encoder:**
 ```unison
 <Type>.encoder : <Type> -> Json
 <Type>.encoder value =
   object.empty
-    |> object.addText "id" value.id
-    |> object.addText "name" value.name
-    |> object.addNat "reps" value.reps
-    -- Handle optionals
-    |> (match value.duration with
-      Some d -> object.addNat "duration" d
-      None -> identity)
-    -- Handle arrays
-    |> object.addArray "tags" (List.map Json.String value.tags)
+    <GENERATED_ENCODER_FIELDS>
 ```
 
-**Field Type Mapping:**
-- `Text` → `object.addText "field" value.field`
-- `Nat` → `object.addNat "field" value.field`
-- `Int` → `object.addInt "field" value.field`
-- `Float` → `object.addFloat "field" value.field`
-- `Boolean` → `object.addBoolean "field" value.field`
-- `Optional T` → Use match to conditionally add
-- `[T]` → `object.addArray "field" (List.map <encoder> value.field)`
-- Nested record → `object.add "field" (<NestedType>.encoder value.field)`
+Where `<GENERATED_ENCODER_FIELDS>` is built by mapping each field:
+- Text field → `|> object.addText "field" value.field`
+- Nat field → `|> object.addNat "field" value.field`
+- Optional field → `|> (match value.field with Some v -> object.addNat "field" v; None -> identity)`
 
-Reference: @.claude/skills/json-mapping-patterns.md
+**Teaching:**
+```
+Encoder pattern:
+- Start with object.empty
+- Chain field additions with |>
+- Each field type has specific add function
+- Optionals use match to conditionally add
+```
 
 Typecheck.
 
 ## Step 4: Generate Decoder
 
-Create decoder using `object.at!` for required fields:
+**EFFICIENT APPROACH:** Build decoder fields programmatically
 
+For each field, generate the appropriate line based on type:
+
+**Generated decoder:**
 ```unison
 <Type>.decoder : '{Decoder} <Type>
 <Type>.decoder = do
   use object at! atOptional
-  id = at! "id" Decoder.text
-  name = at! "name" Decoder.text
-  reps = at! "reps" Decoder.nat
-  duration = atOptional "duration" Decoder.nat
-  tags = at! "tags" (Decoder.array Decoder.text)
-  { id, name, reps, duration, tags }
+  <GENERATED_DECODER_FIELDS>
+  { <field1>, <field2>, ... }
 ```
 
-**Field Type Mapping:**
-- `Text` → `at! "field" Decoder.text`
-- `Nat` → `at! "field" Decoder.nat`
-- `Int` → `at! "field" Decoder.int`
-- `Float` → `at! "field" Decoder.float`
-- `Boolean` → `at! "field" Decoder.boolean`
-- `Optional T` → `atOptional "field" <decoder>`
-- `[T]` → `at! "field" (Decoder.array <decoder>)`
-- Nested record → `at! "field" <NestedType>.decoder`
+Where `<GENERATED_DECODER_FIELDS>` is built by mapping each field:
+- Text field → `field = at! "field" Decoder.text`
+- Nat field → `field = at! "field" Decoder.nat`
+- Optional field → `field = atOptional "field" Decoder.nat`
 
-Reference: @.claude/skills/json-mapping-patterns.md
+**Teaching:**
+```
+Decoder pattern:
+- Use `at!` for required fields (fails if missing)
+- Use `atOptional` for optional fields (returns Optional)
+- Final line constructs the record
+- Decoder runs in a do block
+```
 
 Typecheck.
 
 ## Step 5: Generate Convenience Helpers
 
-Create `encode` and `decode` helpers:
+**EFFICIENT APPROACH:** These are standard, just substitute type name
+
+Generate directly:
 
 ```unison
 <Type>.encode : <Type> -> Text
@@ -108,10 +113,17 @@ Create `encode` and `decode` helpers:
     Right json ->
       match Decoder.run <Type>.decoder json with
         Right value -> value
-        Left err ->
-          Exception.raise (failure "Failed to decode <Type>" err)
-    Left parseErr ->
-      Exception.raise (failure "Failed to parse JSON" parseErr)
+        Left err -> Exception.raise (failure "Failed to decode <Type>" err)
+    Left parseErr -> Exception.raise (failure "Failed to parse JSON" parseErr)
+```
+
+**Teaching:**
+```
+Helper functions:
+- encode: Type → Text (convenience for encoder + Json.toText)
+- decode: Text → Type (handles JSON parse + decoder errors)
+
+These are standard for every type!
 ```
 
 Typecheck.

@@ -2,6 +2,12 @@
 
 You are a Rails-like code generator for Unison web applications.
 
+**IMPORTANT:** Follow the efficient code generation strategy from @.claude/skills/efficient-code-generation.md
+- Copy templates using Write tool
+- Make targeted edits using Edit tool
+- Minimize streaming code
+- Explain concepts separately
+
 Generate a complete CRUD module following these exact steps:
 
 ## Step 1: Gather Requirements
@@ -11,190 +17,100 @@ Ask the user:
 2. What fields does it have? (e.g., "name: Text, description: Text, reps: Nat")
 3. Should I generate JSON mappers? (yes/no)
 
-## Step 2: Create Domain Type
+## Step 2: Create Scratch File with Domain Type
 
-**Teach First:**
-```
-Let's start by defining the domain type - this represents a <Entity> in our system.
-
-## What is a Domain Type?
-
-It's a record that models your business concept. In this case, a <Entity> with:
-- id: Text - We use Text for IDs (will be UUIDs later)
-- [field1]: [Type1] - [explain what this field represents]
-- [field2]: [Type2] - [explain what this field represents]
-
-## Why start with the domain type?
-
-1. It's the CORE of your feature - everything else revolves around it
-2. It's pure data - no dependencies, easy to understand
-3. It drives the design of everything else (ports, services, views)
-
-This is "domain-driven design" - start with the business concept!
-```
-
-Create a new scratch file named `<entity-name>-crud.u` with the domain record:
+Create a new scratch file named `<entity-name>-crud.u`:
 
 ```unison
--- This represents a <Entity> in our system
--- The id is Text because we'll generate UUIDs for each <entity>
 type <Entity> =
   { id : Text
-  , <field1> : <Type1>  -- [explain purpose]
-  , <field2> : <Type2>  -- [explain purpose]
-  -- ... other fields
+  , <field1> : <Type1>
+  , <field2> : <Type2>
   }
 ```
 
-**After showing code:**
+**Teaching (after creating):**
 ```
-Notice:
-- Simple record type - just data, no logic
-- Text ID - we'll generate UUIDs when creating <entities>
-- Clear field names - self-documenting
+I've created the domain type - the CORE of your feature.
 
-This is the foundation. Everything else will work with this type!
+Key points:
+- It's a record that models your <Entity> business concept
+- Text ID because we'll generate UUIDs
+- Pure data - no logic, no dependencies
+
+This drives everything else (ports, services, views).
 ```
 
 Typecheck immediately.
 
 ## Step 3: Generate Repository Port
 
-**Teach First:**
+**EFFICIENT APPROACH:** Copy template and edit
+
+1. **Append repository ability template:**
 ```
-Now let's create the <Entity>Repository - this is a PORT (ability).
-
-## What is a Port?
-
-A port defines WHAT operations we need, not HOW they work.
-
-Think of it as a contract:
-- "I need to get a <entity> by ID"
-- "I need to list all <entities>"
-- "I need to save a <entity>"
-- "I need to delete a <entity>"
-
-But it DOESN'T say:
-- WHERE <entities> are stored (database? memory? file?)
-- HOW they're stored (SQL? OrderedTable? JSON?)
-
-That's decided by the ADAPTER (coming next), not the port.
-
-## Why use a Port?
-
-1. **Testability**: Services can use a FAKE repository for tests
-2. **Flexibility**: Swap storage (in-memory → database) without changing services
-3. **Clarity**: Services declare exactly what they need
-
-This is the "ports & adapters" architecture!
+Bash: cat .claude/templates/repository-ability.u >> <entity-name>-crud.u
 ```
 
-Add to the scratch file:
-
-```unison
--- This is a PORT (ability) - defines WHAT operations we need for <Entity>
--- The actual implementation (HOW) is decided by the adapter
-ability <Entity>Repository where
-  -- Get a single <entity> by ID
-  -- Returns Optional because the <entity> might not exist
-  get     : Text ->{<Entity>Repository} (Optional <Entity>)
-
-  -- Get all <entities>
-  -- Delayed computation (') because it might do I/O
-  listAll : '{<Entity>Repository} [<Entity>]
-
-  -- Save (insert or update) a <entity>
-  -- Takes the full <entity> to save
-  upsert  : <Entity> ->{<Entity>Repository} ()
-
-  -- Delete a <entity> by ID
-  delete  : Text ->{<Entity>Repository} ()
+2. **Edit placeholders:**
+```
+Edit(<entity-name>-crud.u, replace_all=true):
+  - MyEntity → <Entity>
+  - MyEntityRepository → <Entity>Repository
 ```
 
-**After showing code:**
+**Teaching (after editing):**
 ```
-Key insights:
-- get returns Optional - the <entity> might not exist!
-- listAll uses ' (delayed) - will run when forced
-- upsert handles both create AND update
-- All operations use the <Entity>Repository ability
+I've added the <Entity>Repository port (ability).
 
-Services will depend on THIS port, not the database directly.
-That's what makes them testable!
+Key concepts:
+- PORT defines WHAT operations we need (get, list, upsert, delete)
+- Doesn't say HOW or WHERE data is stored
+- Services depend on this, not the database
+- Enables testing with fake adapters
+
+This is ports & adapters architecture!
 ```
-
-Reference: @.claude/templates/repository-ability.u
 
 Typecheck.
 
 ## Step 4: Generate Repository Adapter
 
-**Teach First:**
+**EFFICIENT APPROACH:** Copy template and edit
+
+1. **Append adapter template:**
 ```
-Now we create the ADAPTER - this is HOW the port is implemented.
-
-## What is an Adapter?
-
-While the port says "I need these operations", the adapter says "Here's how to do them".
-
-For <Entity>Repository, we'll use OrderedTable:
-- A key-value store in Unison Cloud
-- Stores <entities> by their ID
-- Supports read, write, delete operations
-
-## How does a Handler Work?
-
-The pattern:
-1. Define `<Repository>.run` that takes the Database
-2. Create the OrderedTable for storing <entities>
-3. Define an internal `go` function
-4. Pattern match on ability operations
-5. Do the actual work (read/write to OrderedTable)
-6. Resume with the result
-
-The magic: `handle !p with cases` intercepts ability calls!
-
-When a service calls `<Entity>Repository.get id`, this handler:
-1. Intercepts that call
-2. Reads from OrderedTable
-3. Resumes the service with the result
-
-This is "algebraic effects" - Unison's superpower!
+Bash: cat .claude/templates/repository-adapter.u >> <entity-name>-crud.u
 ```
 
-Add the adapter using OrderedTable:
-
-```unison
-<Entity>Repository.run :
-  Database ->
-  '{g, <Entity>Repository} a ->
-  {g, Remote} a
-<Entity>Repository.run db p =
-  table = OrderedTable.named db "<entities>" Universal.ordering
-
-  go : '{g, <Entity>Repository} a -> {g, Remote} a
-  go p = handle !p with cases
-    {get id -> resume} ->
-      go '(resume (OrderedTable.tryRead table id))
-    {listAll _ -> resume} ->
-      list = do OrderedTable.toStream table |> Stream.map at2 |> Stream.toList
-      go '(resume list)
-    {upsert e -> resume} ->
-      go '(resume (OrderedTable.write table e.id e))
-    {delete id -> resume} ->
-      go '(resume (OrderedTable.delete table id))
-    {k} -> k
-
-  go p
+2. **Edit placeholders:**
+```
+Edit(<entity-name>-crud.u, replace_all=true):
+  - MyEntity → <Entity>
+  - MyEntityRepository → <Entity>Repository
+  - myentities → <entities>
 ```
 
-Reference: @.claude/templates/repository-adapter.u
+**Teaching (after editing):**
+```
+I've added the adapter - HOW the port is implemented.
+
+Key concepts:
+- Uses OrderedTable (key-value store in Unison Cloud)
+- The `handle !p with cases` intercepts ability calls
+- When service calls <Entity>Repository.get, this runs the actual database read
+- The internal `go` function handles each operation
+
+This is algebraic effects - Unison's superpower!
+```
 
 Typecheck.
 
 ## Step 5: Generate Service
 
-Add the service with all CRUD operations:
+**EFFICIENT APPROACH:** Generate service skeleton, then customize
+
+Add service with CRUD operations directly (service is custom per entity):
 
 ```unison
 <Entity>Service.create : CreateInput ->{<Entity>Repository, UuidGenerator} <Entity>
@@ -204,32 +120,40 @@ Add the service with all CRUD operations:
   <Entity>Repository.upsert entity
   entity
 
-<Entity>Service.update : Text -> UpdateInput ->{<Entity>Repository, Exception} <Entity>
-<Entity>Service.update id input =
-  existing = <Entity>Repository.get id
-  match existing with
-    Some e ->
-      updated = { e with <fields from input> }
-      <Entity>Repository.upsert updated
-      updated
-    None ->
-      Exception.raise (failure "Entity not found" id)
-
-<Entity>Service.delete : Text ->{<Entity>Repository, Exception} ()
-<Entity>Service.delete id =
-  existing = <Entity>Repository.get id
-  match existing with
-    Some _ -> <Entity>Repository.delete id
-    None -> Exception.raise (failure "Entity not found" id)
-
 <Entity>Service.get : Text ->{<Entity>Repository} (Optional <Entity>)
 <Entity>Service.get id = <Entity>Repository.get id
 
 <Entity>Service.listAll : '{<Entity>Repository} [<Entity>]
 <Entity>Service.listAll = <Entity>Repository.listAll
+
+<Entity>Service.update : Text -> UpdateInput ->{<Entity>Repository, Exception} <Entity>
+<Entity>Service.update id input =
+  match <Entity>Repository.get id with
+    Some e ->
+      updated = { e with <fields from input> }
+      <Entity>Repository.upsert updated
+      updated
+    None ->
+      Exception.raise (failure "<Entity> not found" id)
+
+<Entity>Service.delete : Text ->{<Entity>Repository, Exception} ()
+<Entity>Service.delete id =
+  match <Entity>Repository.get id with
+    Some _ -> <Entity>Repository.delete id
+    None -> Exception.raise (failure "<Entity> not found" id)
 ```
 
-Reference: @.claude/templates/service.u
+**Teaching:**
+```
+I've added the service with ALL business logic:
+- create: generates UUID, saves entity
+- get/listAll: simple passthroughs to repository
+- update: validates entity exists, updates fields
+- delete: validates entity exists, deletes
+
+Services depend on the PORT (<Entity>Repository), never the adapter.
+That's what makes them testable!
+```
 
 Typecheck.
 
@@ -239,25 +163,31 @@ If the user requested JSON mappers, use `/generate-json-mappers` command.
 
 ## Step 7: Generate Controller
 
-Add controller functions for each endpoint:
+**EFFICIENT APPROACH:** Generate minimal controller skeleton
+
+Add controller functions (customize based on entity):
 
 ```unison
 <Entity>Controller.index db =
   entities = handle <Entity>Service.listAll() with <Entity>Repository.run db
   html = <Entity>Pages.index entities
-  ok.html (page.full html)
+  ok.html (page.page html [])
 
 <Entity>Controller.create db =
   formData = getFormData()
-  -- Parse form data and call service
-  -- Return appropriate response
+  input = { name = form.getOnly! "name" formData, <other fields> }
+  entity = handle <Entity>Service.create input with <Entity>Repository.run db
+  html = <Entity>Pages.item entity
+  ok.html (page.page html [])
 ```
 
 Typecheck.
 
 ## Step 8: Generate Routes
 
-Add routes following the RESTful pattern:
+**EFFICIENT APPROACH:** Generate RESTful routes directly
+
+Add routes (customize based on entity):
 
 ```unison
 <entity>Routes db =
@@ -272,37 +202,38 @@ Add routes following the RESTful pattern:
     _ = route POST (s "<entities>")
     <Entity>Controller.create db
 
-  show = do
-    id = route GET (s "<entities>" / Parser.text)
-    <Entity>Controller.show db id
-
-  update = do
-    id = route PUT (s "<entities>" / Parser.text)
-    <Entity>Controller.update db id
-
   destroy = do
     id = route DELETE (s "<entities>" / Parser.text)
     <Entity>Controller.destroy db id
 
-  index <|> create <|> show <|> update <|> destroy
+  index <|> create <|> destroy
 ```
 
-Reference: @.claude/templates/routes.u
+**Teaching:**
+```
+RESTful routes:
+- GET /<entities> → list all
+- POST /<entities> → create new
+- DELETE /<entities>/:id → delete by ID
+
+Routes are THIN - just parse URL and delegate to controller.
+```
 
 Typecheck.
 
 ## Step 9: Generate Basic Pages
 
-Create semantic HTML pages using PicoCSS and htmx:
+**EFFICIENT APPROACH:** Generate semantic HTML directly
+
+Add pages (customize based on entity fields):
 
 ```unison
 <Entity>Pages.index : [<Entity>] -> Html
 <Entity>Pages.index entities =
-  use tapegram_html_2_0_0 div h1 ul li a button
+  use tapegram_html_2_0_0 div h1 ul
   div []
     [ h1 [] [text "<Entities>"]
-    , a [href "/<entities>/new"] [text "New <Entity>"]
-    , ul [] (List.map <Entity>Pages.item entities)
+    , ul [id "<entity>-list"] (List.map <Entity>Pages.item entities)
     ]
 
 <Entity>Pages.item : <Entity> -> Html
@@ -319,7 +250,16 @@ Create semantic HTML pages using PicoCSS and htmx:
     ]
 ```
 
-Reference: @.claude/skills/web-stack-pico-htmx.md
+**Teaching:**
+```
+Semantic HTML + htmx:
+- NO CSS classes (PicoCSS classless styles automatically)
+- hxDelete triggers DELETE request
+- hxTarget "closest li" removes the list item
+- hxSwap "outerHTML" replaces the element
+
+Server-side rendering with progressive enhancement!
+```
 
 Typecheck final code.
 
