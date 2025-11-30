@@ -7,6 +7,7 @@ Follow these exact steps:
 ## Step 1: Gather Requirements
 
 Ask the user:
+
 1. What is the route path? (e.g., "/about", "/workouts/:id", "/dashboard")
 2. What HTTP method? (GET, POST, PUT, DELETE)
 3. What should the page display/do?
@@ -34,6 +35,7 @@ Create semantic HTML using PicoCSS classless version (NO CSS classes):
 ```
 
 **IMPORTANT:**
+
 - Use ONLY semantic HTML: `<main>`, `<article>`, `<section>`, `<nav>`, `<aside>`, `<header>`, `<footer>`
 - DO NOT use CSS classes - PicoCSS classless version styles semantic HTML automatically
 - For interactivity, use htmx attributes: `hxGet`, `hxPost`, `hxTarget`, `hxSwap`, `hxTrigger`
@@ -56,6 +58,7 @@ Create a thin controller that calls services and renders the page:
 ```
 
 **IMPORTANT:**
+
 - Controllers should be THIN - no business logic
 - Use `page.page` which handles both full page and partial rendering
 - Call services, not repositories directly
@@ -77,6 +80,7 @@ Add route using the Route ability:
 ```
 
 **Examples:**
+
 - GET /about: `route GET (s "about")`
 - GET /users/:id: `id = route GET (s "users" / Parser.text)`
 - POST /workouts: `route POST (s "workouts")`
@@ -90,6 +94,7 @@ Typecheck.
 Tell the user:
 
 1. "Add this route to your main routes composition in `app.routes`:"
+
    ```unison
    app.routes db =
      use Route <|>
@@ -98,6 +103,7 @@ Tell the user:
    ```
 
 2. "Load the file in UCM:"
+
    ```
    load <page-name>-feature.u
    ```
@@ -109,21 +115,28 @@ Tell the user:
 If the page uses htmx, show examples:
 
 **For dynamic updates:**
+
 ```unison
 button
-  [ hxGet "/api/data"
-  , hxTarget "#result"
-  , hxSwap "innerHTML"
+  button
+    [ hx_get (baseUrl Path./ "api" Path./ "data" |> Path.toText)
+    , hx_target "#result"
+    , hx_swap "innerHTML"
+    ]
+    [text "Load Data"]
+  , hx_target "#result"
+  , hx_swap "innerHTML"
   ]
   [text "Load Data"]
 ```
 
 **For form submission:**
+
 ```unison
 form
-  [ hxPost "/workouts"
-  , hxTarget "#workout-list"
-  , hxSwap "beforeend"
+  [ hx_post (baseUrl Path./ "workouts")
+  , hx_target "#workout-list"
+  , hx_swap "beforeend"
   ]
   [ input [name "title"] []
   , button [type' "submit"] [text "Add"]

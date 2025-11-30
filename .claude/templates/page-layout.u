@@ -92,3 +92,11 @@ web.page.css.raw =
 
   
   
+{{
+Base URL helper. Necessary when generating any links in <a> tags or forms.
+This is because unison apps are all deployed on the same domain with unique path prefixes.
+
+For example /s/stage-app/<rest of the url>, or by hash /h/<some hash>/<rest of the url>
+}}
+web.baseUrl : '{Route} Path
+web.baseUrl = do basePath (Headers request.headers())
