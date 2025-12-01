@@ -17,10 +17,10 @@ type {{pascalCase entityName}} =
 -- =============================================================================
 
 ability {{pascalCase entityName}}Repository where
-  get     : Text ->{{"{"}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
-  listAll : '{{"{"}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
-  upsert  : {{pascalCase entityName}} ->{{"{"}}{{pascalCase entityName}}Repository} ()
-  delete  : Text ->{{"{"}}{{pascalCase entityName}}Repository} ()
+  get     : Text ->{{openBrace}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
+  listAll : '{{openBrace}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
+  upsert  : {{pascalCase entityName}} ->{{openBrace}}{{pascalCase entityName}}Repository} ()
+  delete  : Text ->{{openBrace}}{{pascalCase entityName}}Repository} ()
 
 -- =============================================================================
 -- REPOSITORY ADAPTER (HANDLER)
@@ -28,72 +28,46 @@ ability {{pascalCase entityName}}Repository where
 
 storage.{{pascalCase entityName}}Repository.run :
   Database ->
-  '{g, {{pascalCase entityName}}Repository} a ->
-  {g, Remote} a
-storage.{{pascalCase entityName}}Repository.run db p =
+  '{{openBrace}}g, {{pascalCase entityName}}Repository} a ->
+  {{openBrace}}g, Remote} a
+storage.{{pascalCase entityName}}Repository.run db computation =
   table : OrderedTable Text {{pascalCase entityName}}
   table = OrderedTable.named db "{{pluralize (lowercase entityName)}}" Universal.ordering
 
-  get' : Text ->{g, Remote} (Optional {{pascalCase entityName}})
-  get' id = OrderedTable.tryRead table id
+  get' : Text ->{{openBrace}}g, Remote} (Optional {{pascalCase entityName}})
+  get' entityId = OrderedTable.tryRead table entityId
 
-  listAll' : '{g, Remote} [{{pascalCase entityName}}]
-  listAll' =
-    do OrderedTable.toStream table
-       |> Stream.map at2
-       |> Stream.toList
+  listAll' : '{{openBrace}}g, Remote} [{{pascalCase entityName}}]
+  listAll' = do
+    OrderedTable.toStream table
+      |> Stream.map at2
+      |> Stream.toList
 
-  upsert' : {{pascalCase entityName}} ->{g, Remote} ()
-  upsert' e = OrderedTable.write table e.id e
+  upsert' : {{pascalCase entityName}} ->{{openBrace}}g, Remote} ()
+  upsert' entity = OrderedTable.write table ({{pascalCase entityName}}.id entity) entity
 
-  delete' : Text ->{g, Remote} ()
-  delete' id = OrderedTable.delete table id
+  delete' : Text ->{{openBrace}}g, Remote} ()
+  delete' entityId = OrderedTable.delete table entityId
 
-  go : '{g, {{pascalCase entityName}}Repository} a -> {g, Remote} a
-  go p = handle !p with cases
-    {get id -> resume}     -> go '(resume (get' id))
-    {listAll _ -> resume}  -> go '(resume (listAll' ()))
-    {upsert e -> resume}   -> go '(resume (upsert' e))
-    {delete id -> resume}  -> go '(resume (delete' id))
-    {k} -> k
+  go : '{{openBrace}}g, {{pascalCase entityName}}Repository} a -> {{openBrace}}g, Remote} a
+  go p =
+    handle p()
+    with cases
+      {{openBrace}} {{pascalCase entityName}}Repository.get entityId -> resume } ->
+        result = get' entityId
+        go do resume result
+      {{openBrace}} {{pascalCase entityName}}Repository.listAll _ -> resume } ->
+        result = listAll'()
+        go do resume result
+      {{openBrace}} {{pascalCase entityName}}Repository.upsert entity -> resume } ->
+        result = upsert' entity
+        go do resume result
+      {{openBrace}} {{pascalCase entityName}}Repository.delete entityId -> resume } ->
+        result = delete' entityId
+        go do resume result
+      {{openBrace}} a } -> a
 
-  go p
-
--- =============================================================================
--- FAKE REPOSITORY (FOR TESTING)
--- =============================================================================
-
-{{pascalCase entityName}}Repository.fake :
-  Ref [{{pascalCase entityName}}] ->
-  '{g, {{pascalCase entityName}}Repository} a ->
-  {g} a
-{{pascalCase entityName}}Repository.fake storage p =
-  go : '{g, {{pascalCase entityName}}Repository} a -> {g} a
-  go p = handle !p with cases
-    {get id -> resume} ->
-      items = Ref.read storage
-      result = List.find (item -> item.id == id) items
-      go '(resume result)
-
-    {listAll _ -> resume} ->
-      items = Ref.read storage
-      go '(resume items)
-
-    {upsert item -> resume} ->
-      items = Ref.read storage
-      filtered = List.filter (i -> i.id != item.id) items
-      Ref.write storage (item +: filtered)
-      go '(resume ())
-
-    {delete id -> resume} ->
-      items = Ref.read storage
-      filtered = List.filter (i -> i.id != id) items
-      Ref.write storage filtered
-      go '(resume ())
-
-    {k} -> k
-
-  go p
+  go computation
 
 -- =============================================================================
 -- SERVICE
@@ -111,99 +85,92 @@ type {{pascalCase entityName}}Service.UpdateInput =
 
 {{pascalCase entityName}}Service.create :
   {{pascalCase entityName}}Service.CreateInput ->
-  {{"{"}}{{pascalCase entityName}}Repository, Random} {{pascalCase entityName}}
-{{pascalCase entityName}}Service.create input =
-  id = Uuid.new () |> Uuid.toText
-  entity = { id{{#each fields}}, {{name}} = input.{{name}}{{/each}} }
+  {{openBrace}}{{pascalCase entityName}}Repository, Random} {{pascalCase entityName}}
+{{pascalCase entityName}}Service.create createInput =
+  newId = newv4() |> Uuid.toText
+  entity = {{pascalCase entityName}} newId {{#each fields}}({{pascalCase ../entityName}}Service.CreateInput.{{name}} createInput){{#unless @last}} {{/unless}}{{/each}}
   {{pascalCase entityName}}Repository.upsert entity
   entity
 
 {{pascalCase entityName}}Service.get :
   Text ->
-  {{"{"}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
-{{pascalCase entityName}}Service.get id =
-  {{pascalCase entityName}}Repository.get id
+  {{openBrace}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
+{{pascalCase entityName}}Service.get entityId =
+  {{pascalCase entityName}}Repository.get entityId
 
 {{pascalCase entityName}}Service.listAll :
-  '{{"{"}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
+  '{{openBrace}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
 {{pascalCase entityName}}Service.listAll =
   {{pascalCase entityName}}Repository.listAll
 
 {{pascalCase entityName}}Service.update :
   Text ->
   {{pascalCase entityName}}Service.UpdateInput ->
-  {{"{"}}{{pascalCase entityName}}Repository, Exception} {{pascalCase entityName}}
-{{pascalCase entityName}}Service.update id input =
+  {{openBrace}}{{pascalCase entityName}}Repository, Exception} {{pascalCase entityName}}
+{{pascalCase entityName}}Service.update entityId updateInput =
   use Optional None Some
-  match {{pascalCase entityName}}Repository.get id with
+  match {{pascalCase entityName}}Repository.get entityId with
     Some existing ->
-      updated = { existing with {{#each fields}}{{name}} = input.{{name}}{{#unless @last}}, {{/unless}}{{/each}} }
+      updated = {{pascalCase entityName}} ({{pascalCase entityName}}.id existing) {{#each fields}}({{pascalCase ../entityName}}Service.UpdateInput.{{name}} updateInput){{#unless @last}} {{/unless}}{{/each}}
       {{pascalCase entityName}}Repository.upsert updated
       updated
     None ->
-      Exception.raise (failure "{{pascalCase entityName}} not found" id)
+      Exception.raise (failure "{{pascalCase entityName}} not found" entityId)
 
 {{pascalCase entityName}}Service.delete :
   Text ->
-  {{"{"}}{{pascalCase entityName}}Repository, Exception} ()
-{{pascalCase entityName}}Service.delete id =
+  {{openBrace}}{{pascalCase entityName}}Repository, Exception} ()
+{{pascalCase entityName}}Service.delete entityId =
   use Optional None Some
-  match {{pascalCase entityName}}Repository.get id with
-    Some _ -> {{pascalCase entityName}}Repository.delete id
-    None -> Exception.raise (failure "{{pascalCase entityName}} not found" id)
+  match {{pascalCase entityName}}Repository.get entityId with
+    Some _ -> {{pascalCase entityName}}Repository.delete entityId
+    None -> Exception.raise (failure "{{pascalCase entityName}} not found" entityId)
 
 -- =============================================================================
 -- ROUTES
 -- =============================================================================
 
 app.routes.{{pluralize (camelCase entityName)}} :
-  '{Route, Log, Exception, {{pascalCase entityName}}Repository, Random} ()
+  '{{openBrace}}Route, Log, Exception, {{pascalCase entityName}}Repository, Random} ()
 app.routes.{{pluralize (camelCase entityName)}} =
   use Route <|>
-  use Parser / s
+  use Parser s
 
   -- GET /{{pluralize (lowercase entityName)}} - List all
-  index = do
+  indexRoute = do
     noCapture GET (s "{{pluralize (lowercase entityName)}}")
     items = {{pascalCase entityName}}Service.listAll ()
     html = app.pages.{{pluralize (camelCase entityName)}}.index items ()
     ok.html ({{htmlLib}}.toText html)
-  index
 
   -- POST /{{pluralize (lowercase entityName)}} - Create new
-  create = do
+  createRoute = do
     noCapture POST (s "{{pluralize (lowercase entityName)}}")
     formData = getFormData()
-    input =
-      { {{#each fields}}{{name}} = form.getOnly! "{{name}}" formData{{#unless @last}}
-      , {{/unless}}{{/each}}
-      }
-    item = {{pascalCase entityName}}Service.create input
-    html = app.pages.{{pluralize (camelCase entityName)}}.item item ()
+    createInput = CreateInput {{#each fields}}({{#if (eq type "Text")}}form.getOnly! "{{name}}" formData{{else if (eq type "Nat")}}Nat.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Int")}}Int.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Float")}}Float.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Boolean")}}Boolean.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else}}form.getOnly! "{{name}}" formData{{/if}}){{#unless @last}} {{/unless}}{{/each}}
+    created = {{pascalCase entityName}}Service.create createInput
+    html = app.pages.{{pluralize (camelCase entityName)}}.item created ()
     ok.html ({{htmlLib}}.toText html)
-  create
 
   -- GET /{{pluralize (lowercase entityName)}}/:id - Get one
-  show = do
-    id = route GET (s "{{pluralize (lowercase entityName)}}" / Parser.text)
+  showRoute = do
+    entityId = route GET (s "{{pluralize (lowercase entityName)}}" Parser./ Parser.text)
     use Optional None Some
-    match {{pascalCase entityName}}Service.get id with
-      Some item ->
-        html = app.pages.{{pluralize (camelCase entityName)}}.show item ()
+    match {{pascalCase entityName}}Service.get entityId with
+      Some entity ->
+        html = app.pages.{{pluralize (camelCase entityName)}}.show entity ()
         ok.html ({{htmlLib}}.toText html)
       None ->
-        notFound.text ("{{pascalCase entityName}} not found: " Text.++ id)
-  show
+        notFound.text ("{{pascalCase entityName}} not found: " Text.++ entityId)
 
   -- DELETE /{{pluralize (lowercase entityName)}}/:id - Delete
-  destroy = do
-    id = route DELETE (s "{{pluralize (lowercase entityName)}}" / Parser.text)
-    {{pascalCase entityName}}Service.delete id
+  destroyRoute = do
+    entityId = route DELETE (s "{{pluralize (lowercase entityName)}}" Parser./ Parser.text)
+    {{pascalCase entityName}}Service.delete entityId
     ok.text ""
-  destroy
 
   -- Order matters: more specific routes first
-  destroy <|> show <|> create <|> index
+  destroyRoute <|> showRoute <|> createRoute <|> indexRoute
 
 -- =============================================================================
 -- PAGES
@@ -211,61 +178,58 @@ app.routes.{{pluralize (camelCase entityName)}} =
 
 app.pages.{{pluralize (camelCase entityName)}}.index :
   [{{pascalCase entityName}}] ->
-  '{Route} Html
+  '{{openBrace}}Route} Html
 app.pages.{{pluralize (camelCase entityName)}}.index items = do
-  use {{htmlLib}} article button div form h1 input li text ul
-  use Path /
+  use {{htmlLib}} article button div form h1 li text ul
 
-  createUrl = baseUrl() / "{{pluralize (lowercase entityName)}}" |> Path.toText
+  createUrl = baseUrl() Path./ "{{pluralize (lowercase entityName)}}" |> Path.toText
 
   article []
     [ h1 [] [text "{{pascalCase entityName}}s"]
     , form
         [ hx_post createUrl
         , hx_target "#{{lowercase entityName}}-list"
-        , hx_swap "beforeend"
+        , hx_swap AdjacentHtml.BeforeEnd Optional.None
         ]
-        [ {{#each fields}}input [name "{{name}}", placeholder "{{name}}"] []
-        , {{/each}}button [type' "submit"] [text "Add {{pascalCase entityName}}"]
+        [ {{#each fields}}input [name "{{name}}", placeholder "{{name}}"]
+        , {{/each}}button [type_ "submit"] [text "Add {{pascalCase entityName}}"]
         ]
     , ul [id "{{lowercase entityName}}-list"]
-        (List.map (item -> app.pages.{{pluralize (camelCase entityName)}}.item item ()) items)
+        (List.map (entity -> app.pages.{{pluralize (camelCase entityName)}}.item entity ()) items)
     ]
 
 app.pages.{{pluralize (camelCase entityName)}}.item :
   {{pascalCase entityName}} ->
-  '{Route} Html
-app.pages.{{pluralize (camelCase entityName)}}.item item = do
+  '{{openBrace}}Route} Html
+app.pages.{{pluralize (camelCase entityName)}}.item entity = do
   use {{htmlLib}} button li span text
-  use Path /
 
-  deleteUrl = baseUrl() / "{{pluralize (lowercase entityName)}}" / item.id |> Path.toText
+  deleteUrl = baseUrl() Path./ "{{pluralize (lowercase entityName)}}" Path./ ({{pascalCase entityName}}.id entity) |> Path.toText
 
   li []
-    [ span [] [text item.{{#if fields}}{{fields.[0].name}}{{else}}id{{/if}}]
+    [ span [] [text ({{pascalCase entityName}}.{{#if fields}}{{fields.[0].name}}{{else}}id{{/if}} entity)]
     , button
         [ hx_delete deleteUrl
         , hx_target "closest li"
-        , hx_swap "outerHTML"
+        , hx_swap AdjacentHtml.OuterHtml Optional.None
         ]
         [text "Delete"]
     ]
 
 app.pages.{{pluralize (camelCase entityName)}}.show :
   {{pascalCase entityName}} ->
-  '{Route} Html
-app.pages.{{pluralize (camelCase entityName)}}.show item = do
+  '{{openBrace}}Route} Html
+app.pages.{{pluralize (camelCase entityName)}}.show entity = do
   use {{htmlLib}} article dd dl dt h1 text
-  use Path /
 
   article []
     [ h1 [] [text "{{pascalCase entityName}} Details"]
     , dl []
         [ dt [] [text "ID"]
-        , dd [] [text item.id]
+        , dd [] [text ({{pascalCase entityName}}.id entity)]
 {{#each fields}}
         , dt [] [text "{{name}}"]
-        , dd [] [text ({{#if (eq type "Text")}}item.{{name}}{{else}}Debug.evalToText item.{{name}}{{/if}})]
+        , dd [] [text ({{#if (eq type "Text")}}{{pascalCase ../entityName}}.{{name}} entity{{else}}Debug.evalToText ({{pascalCase ../entityName}}.{{name}} entity){{/if}})]
 {{/each}}
         ]
     ]

@@ -64,30 +64,40 @@ You'll be prompted for:
 
 ### CLI Mode (Non-Interactive) - RECOMMENDED FOR CLAUDE
 
-Use `plop-cli.js` for non-interactive generation with CLI arguments:
+Use `npx plop` with positional bypass arguments (values in order of prompts):
 
 ```bash
 # Scaffold a new app
-node plop-cli.js unison-web-app --appName MyApp --htmlLib tapegram_html_2_0_0
+npx plop unison-web-app "MyApp" "tapegram_html_2_1_0"
 
 # Generate CRUD module
-node plop-cli.js crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true
+# Args: entityName, fields, includeJson, htmlLib
+npx plop crud-module "Workout" "name:Text,reps:Nat" "true" "tapegram_html_2_1_0"
 
 # Generate ability and handler
-node plop-cli.js ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]'
+# Args: abilityName, operations, adapterType, includeFake
+npx plop ability-handler "EmailClient" '[{"name":"send","inputType":"Email","outputType":"()"}]' "HTTP API" "true"
 
 # Generate JSON mappers
-node plop-cli.js json-mappers --typeName User --fields "id:Text,name:Text,age:Nat"
+# Args: typeName, fields
+npx plop json-mappers "User" "id:Text,name:Text,age:Nat"
 
 # Generate page and route
-node plop-cli.js page-route --pageName Dashboard --routePath dashboard --httpMethod GET
+# Args: pageName, routePath, httpMethod, hasParams, htmlLib
+npx plop page-route "Dashboard" "dashboard" "GET" "false" "tapegram_html_2_1_0"
 
 # Generate API client
-node plop-cli.js api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/user","responseType":"Json"}]'
+# Args: clientName, baseUrl, operations
+npx plop api-client "GitHub" "api.github.com" '[{"name":"getUser","httpMethod":"GET","endpoint":"/user","responseType":"Json"}]'
 
 # Generate service tests
-node plop-cli.js service-tests --serviceName WorkoutService --entityName Workout --operations "create,get,listAll,update,delete"
+# Args: serviceName, entityName, repositoryName, operations
+npx plop service-tests "WorkoutService" "Workout" "WorkoutRepository" "create,get,listAll,update,delete"
 ```
+
+**IMPORTANT:** Arguments are positional (in order of prompts), not named flags.
+
+**NEVER use `npm run plop --` or other variations - always use `npx plop`.**
 
 **Field Formats:**
 - Simple: `name:Text,count:Nat,active:Boolean`
@@ -118,7 +128,7 @@ You'll be prompted for:
 
 ```bash
 # Step 1: Run generator (CLI mode)
-node plop-cli.js crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_0_0
+npx plop crud-module "Workout" "name:Text,reps:Nat" "true" "tapegram_html_2_1_0"
 
 # Step 2: Customize generated file
 Edit(workout-crud.u): Add any custom business logic
@@ -134,7 +144,7 @@ mcp__unison__typecheck-code with file path
 
 ```bash
 # Step 1: Run generator (CLI mode)
-node plop-cli.js api-client --clientName Weather --baseUrl api.weather.com --operations '[{"name":"getCurrentWeather","httpMethod":"GET","endpoint":"/weather","responseType":"Weather"}]'
+npx plop api-client "Weather" "api.weather.com" '[{"name":"getCurrentWeather","httpMethod":"GET","endpoint":"/weather","responseType":"Weather"}]'
 
 # Step 2: Customize for specific API requirements
 Edit(weather-api-client.u): Add authentication headers, etc.

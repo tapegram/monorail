@@ -11,12 +11,12 @@ deploy.appName = "{{pascalCase appName}}"
 deploy.stageAppName : Text
 deploy.stageAppName =
   use Text ++
-  "stage-" ++ appName
+  "stage-" ++ deploy.appName
 
 deploy.devAppName : Text
 deploy.devAppName =
   use Text ++
-  "dev-" ++ appName
+  "dev-" ++ deploy.appName
 
 -- =============================================================================
 -- DEPLOYMENT FUNCTIONS
@@ -26,8 +26,8 @@ deploy.deployProd : '{IO, Exception} URI
 deploy.deployProd = Cloud.main do
   environment = Environment.default()
   database = deploy.initializeStorage environment
-  serviceName = ServiceName.named appName
-  serviceHash = deployHttp environment (main database)
+  serviceName = ServiceName.named deploy.appName
+  serviceHash = deployHttp environment (main.main database)
   setValue environment "deployHash" (serviceHash |> ServiceHash.toText)
   setValue environment "env" "prod"
   setValue environment "deployedAt" (Instant.toText Instant.now())
@@ -35,10 +35,10 @@ deploy.deployProd = Cloud.main do
 
 deploy.deployStage : '{IO, Exception} URI
 deploy.deployStage = Cloud.main do
-  environment = Environment.named stageAppName
+  environment = Environment.named deploy.stageAppName
   database = deploy.initializeStorage environment
-  serviceName = ServiceName.named stageAppName
-  serviceHash = deployHttp environment (main database)
+  serviceName = ServiceName.named deploy.stageAppName
+  serviceHash = deployHttp environment (main.main database)
   setValue environment "deployHash" (serviceHash |> ServiceHash.toText)
   setValue environment "env" "stage"
   setValue environment "deployedAt" (Instant.toText Instant.now())
@@ -46,10 +46,10 @@ deploy.deployStage = Cloud.main do
 
 deploy.deployDev : '{IO, Exception} URI
 deploy.deployDev = Cloud.main do
-  environment = Environment.named devAppName
+  environment = Environment.named deploy.devAppName
   database = deploy.initializeStorage environment
-  serviceName = ServiceName.named devAppName
-  serviceHash = deployHttp environment (main database)
+  serviceName = ServiceName.named deploy.devAppName
+  serviceHash = deployHttp environment (main.main database)
   setValue environment "deployHash" (serviceHash |> ServiceHash.toText)
   setValue environment "env" "dev"
   setValue environment "deployedAt" (Instant.toText Instant.now())
@@ -58,7 +58,7 @@ deploy.deployDev = Cloud.main do
 deploy.initializeStorage : Environment ->{Exception, Cloud} Database
 deploy.initializeStorage env =
   use Text ++
-  dbName = env |> Environment.name ++ "db"
+  dbName = Environment.name env ++ "db"
   database = Database.named dbName
   Database.assign database env
   database
@@ -91,7 +91,7 @@ app.routes :
   Database ->
   '{Route, Log, Exception, Environment.Config} ()
 app.routes db =
-  use Parser / s
+  use Parser s
   use Route <|>
 
   -- Health check / heartbeat
@@ -100,6 +100,7 @@ app.routes db =
     deployedAt = Config.expect "deployedAt"
     json = object.empty |> object.addText "deployedAt" deployedAt
     ok.json json
+  heartbeat
 
   -- Home page
   home = do
@@ -107,6 +108,7 @@ app.routes db =
     html = app.pages.home ()
     renderedHtml = !(web.page.page [html] [])
     ok.html ({{htmlLib}}.toText renderedHtml)
+  home
 
   heartbeat <|> home
 

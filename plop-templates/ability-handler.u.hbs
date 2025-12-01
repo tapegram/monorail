@@ -7,7 +7,7 @@
 
 ability {{pascalCase abilityName}} where
 {{#each operations}}
-  {{name}} : {{#if (eq inputType "()")}}'{{"{"}}{{pascalCase ../abilityName}}} {{outputType}}{{else}}{{inputType}} ->{{"{"}}{{pascalCase ../abilityName}}} {{outputType}}{{/if}}
+  {{name}} : {{#if (eq inputType "()")}}'{{openBrace}}{{pascalCase ../abilityName}}{{closeBrace}} {{outputType}}{{else}}{{inputType}} ->{{openBrace}}{{pascalCase ../abilityName}}{{closeBrace}} {{outputType}}{{/if}}
 {{/each}}
 
 -- =============================================================================
@@ -17,37 +17,37 @@ ability {{pascalCase abilityName}} where
 {{#if (eq adapterType "Database (OrderedTable)")}}
 {{pascalCase abilityName}}.run :
   Database ->
-  '{g, {{pascalCase abilityName}}} a ->
+  '{g, {{pascalCase abilityName}}{{closeBrace}} a ->
   {g, Remote} a
-{{pascalCase abilityName}}.run db p =
+{{pascalCase abilityName}}.run db computation =
   -- TODO: Define your table
   -- table = OrderedTable.named db "tablename" Universal.ordering
 
-  go : '{g, {{pascalCase abilityName}}} a -> {g, Remote} a
-  go p = handle !p with cases
+  go : '{g, {{pascalCase abilityName}}{{closeBrace}} a -> {g, Remote} a
+  go comp = handle !comp with cases
 {{#each operations}}
-    { {{name}} {{#unless (eq inputType "()")}}input {{/unless}}-> resume} ->
+    {{openBrace}}{{pascalCase ../abilityName}}.{{name}} {{#unless (eq inputType "()")}}opInput {{/unless}}-> resume} ->
       result = todo "Implement {{name}} with database"
       go '(resume result)
 
 {{/each}}
     {k} -> k
 
-  go p
+  go computation
 {{else if (eq adapterType "HTTP API")}}
 {{pascalCase abilityName}}.run :
   Text ->
-  '{g, {{pascalCase abilityName}}} a ->
+  '{g, {{pascalCase abilityName}}{{closeBrace}} a ->
   {g, Http, Exception} a
-{{pascalCase abilityName}}.run baseUrl p =
-  go : '{g, {{pascalCase abilityName}}} a -> {g, Http, Exception} a
-  go p = handle !p with cases
+{{pascalCase abilityName}}.run baseApiUrl computation =
+  go : '{g, {{pascalCase abilityName}}{{closeBrace}} a -> {g, Http, Exception} a
+  go comp = handle !comp with cases
 {{#each operations}}
-    { {{name}} {{#unless (eq inputType "()")}}input {{/unless}}-> resume} ->
+    {{openBrace}}{{pascalCase ../abilityName}}.{{name}} {{#unless (eq inputType "()")}}opInput {{/unless}}-> resume} ->
       uri =
         fromPath (root / "{{name}}")
           |> URI.https
-          |> URI.withHost baseUrl
+          |> URI.withHost baseApiUrl
       req = HttpRequest.get uri
             |> HttpRequest.addHeader "Accept" "application/json"
       resp = Http.request req
@@ -58,45 +58,23 @@ ability {{pascalCase abilityName}} where
 {{/each}}
     {k} -> k
 
-  go p
+  go computation
 {{else}}
 {{pascalCase abilityName}}.run :
-  '{g, {{pascalCase abilityName}}} a ->
+  '{g, {{pascalCase abilityName}}{{closeBrace}} a ->
   {g} a
-{{pascalCase abilityName}}.run p =
-  go : '{g, {{pascalCase abilityName}}} a -> {g} a
-  go p = handle !p with cases
+{{pascalCase abilityName}}.run computation =
+  go : '{g, {{pascalCase abilityName}}{{closeBrace}} a -> {g} a
+  go comp = handle !comp with cases
 {{#each operations}}
-    { {{name}} {{#unless (eq inputType "()")}}input {{/unless}}-> resume} ->
+    {{openBrace}}{{pascalCase ../abilityName}}.{{name}} {{#unless (eq inputType "()")}}opInput {{/unless}}-> resume} ->
       result = todo "Implement {{name}}"
       go '(resume result)
 
 {{/each}}
     {k} -> k
 
-  go p
-{{/if}}
-
-{{#if includeFake}}
--- =============================================================================
--- FAKE ADAPTER (FOR TESTING)
--- =============================================================================
-
-{{pascalCase abilityName}}.fake :
-  '{g, {{pascalCase abilityName}}} a ->
-  {g} a
-{{pascalCase abilityName}}.fake p =
-  go : '{g, {{pascalCase abilityName}}} a -> {g} a
-  go p = handle !p with cases
-{{#each operations}}
-    { {{name}} {{#unless (eq inputType "()")}}input {{/unless}}-> resume} ->
-      result = todo "Fake implementation for {{name}}"
-      go '(resume result)
-
-{{/each}}
-    {k} -> k
-
-  go p
+  go computation
 {{/if}}
 
 -- =============================================================================
@@ -105,24 +83,24 @@ ability {{pascalCase abilityName}} where
 
 {-
 -- In a service:
-MyService.doSomething : Input ->{{"{"}}{{pascalCase abilityName}}} Output
-MyService.doSomething input =
+MyService.doSomething : ServiceInput ->{{openBrace}}{{pascalCase abilityName}}{{closeBrace}} Output
+MyService.doSomething serviceInput =
 {{#if operations.[0]}}
-  result = {{pascalCase abilityName}}.{{operations.[0].name}} {{#unless (eq operations.[0].inputType "()")}}input{{else}}(){{/unless}}
+  result = {{pascalCase abilityName}}.{{operations.[0].name}} {{#unless (eq operations.[0].inputType "()")}}serviceInput{{else}}(){{/unless}}
 {{/if}}
   todo "business logic"
 
 -- In main/controller (with real adapter):
 {{#if (eq adapterType "Database (OrderedTable)")}}
-handle MyService.doSomething input with {{pascalCase abilityName}}.run database
+{{pascalCase abilityName}}.run database do MyService.doSomething serviceInput
 {{else if (eq adapterType "HTTP API")}}
-handle MyService.doSomething input with {{pascalCase abilityName}}.run "api.example.com"
+{{pascalCase abilityName}}.run "api.example.com" do MyService.doSomething serviceInput
 {{else}}
-handle MyService.doSomething input with {{pascalCase abilityName}}.run
+{{pascalCase abilityName}}.run do MyService.doSomething serviceInput
 {{/if}}
 
 -- In tests (with fake adapter):
 test> MyService.tests.doSomething = test.verify do
-  result = handle MyService.doSomething testInput with {{pascalCase abilityName}}.fake
+  result = todo "Use fake adapter when implemented"
   ensureEqual result expected
 -}

@@ -4,93 +4,65 @@
 -- =============================================================================
 
 {{pascalCase entityName}}.encoder : {{pascalCase entityName}} -> Json
-{{pascalCase entityName}}.encoder value =
+{{pascalCase entityName}}.encoder entity =
   object.empty
-    |> object.addText "id" value.id
+    |> object.addText "id" ({{pascalCase entityName}}.id entity)
 {{#each fields}}
 {{#if (eq type "Text")}}
-    |> object.addText "{{name}}" value.{{name}}
+    |> object.addText "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Nat")}}
-    |> object.addNat "{{name}}" value.{{name}}
+    |> object.addNat "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Int")}}
-    |> object.addInt "{{name}}" value.{{name}}
+    |> object.addInt "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Float")}}
-    |> object.addFloat "{{name}}" value.{{name}}
+    |> object.addFloat "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Boolean")}}
-    |> object.addBoolean "{{name}}" value.{{name}}
+    |> object.addBoolean "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
 {{else if (startsWith type "Optional ")}}
-    |> (match value.{{name}} with
+    |> (match {{pascalCase ../entityName}}.{{name}} entity with
           Some v -> object.add{{substring type 9}} "{{name}}" v
           None -> identity)
 {{else if (startsWith type "[")}}
-    |> object.addArray "{{name}}" (List.map Json.String value.{{name}})
+    |> object.addArray "{{name}}" (List.map Json.String ({{pascalCase ../entityName}}.{{name}} entity))
 {{else}}
-    |> object.addJson "{{name}}" ({{type}}.encoder value.{{name}})
+    |> object.addJson "{{name}}" ({{type}}.encoder ({{pascalCase ../entityName}}.{{name}} entity))
 {{/if}}
 {{/each}}
 
 {{pascalCase entityName}}.decoder : '{Decoder} {{pascalCase entityName}}
 {{pascalCase entityName}}.decoder = do
   use object at! atOptional
-  id = at! "id" Decoder.text
+  decodedId = at! "id" Decoder.text
 {{#each fields}}
 {{#if (eq type "Text")}}
-  {{name}} = at! "{{name}}" Decoder.text
+  decoded{{pascalCase name}} = at! "{{name}}" Decoder.text
 {{else if (eq type "Nat")}}
-  {{name}} = at! "{{name}}" Decoder.nat
+  decoded{{pascalCase name}} = at! "{{name}}" Decoder.nat
 {{else if (eq type "Int")}}
-  {{name}} = at! "{{name}}" Decoder.int
+  decoded{{pascalCase name}} = at! "{{name}}" Decoder.int
 {{else if (eq type "Float")}}
-  {{name}} = at! "{{name}}" Decoder.float
+  decoded{{pascalCase name}} = at! "{{name}}" Decoder.float
 {{else if (eq type "Boolean")}}
-  {{name}} = at! "{{name}}" Decoder.boolean
+  decoded{{pascalCase name}} = at! "{{name}}" Decoder.boolean
 {{else if (startsWith type "Optional ")}}
-  {{name}} = atOptional "{{name}}" Decoder.{{lowercase (substring type 9)}}
+  decoded{{pascalCase name}} = atOptional "{{name}}" Decoder.{{lowercase (substring type 9)}}
 {{else if (startsWith type "[")}}
-  {{name}} = at! "{{name}}" (Decoder.array Decoder.text)
+  decoded{{pascalCase name}} = at! "{{name}}" (Decoder.array Decoder.text)
 {{else}}
-  {{name}} = at! "{{name}}" {{type}}.decoder
+  decoded{{pascalCase name}} = at! "{{name}}" {{type}}.decoder
 {{/if}}
 {{/each}}
-  { id{{#each fields}}, {{name}}{{/each}} }
+  {{pascalCase entityName}} decodedId{{#each fields}} decoded{{pascalCase name}}{{/each}}
 
 {{pascalCase entityName}}.encode : {{pascalCase entityName}} -> Text
-{{pascalCase entityName}}.encode value = Json.toText ({{pascalCase entityName}}.encoder value)
+{{pascalCase entityName}}.encode entity = Json.toText ({{pascalCase entityName}}.encoder entity)
 
-{{pascalCase entityName}}.decode : Text ->{Exception} {{pascalCase entityName}}
-{{pascalCase entityName}}.decode txt =
-  match Json.tryFromText txt with
-    Right json ->
-      match Decoder.run {{pascalCase entityName}}.decoder json with
-        Right value -> value
-        Left err -> Exception.raise (failure "Failed to decode {{pascalCase entityName}}" err)
-    Left parseErr ->
-      Exception.raise (failure "Failed to parse JSON" parseErr)
+{{pascalCase entityName}}.decode : Text ->{{openBrace}}Exception} {{pascalCase entityName}}
+{{pascalCase entityName}}.decode txt = Decoder.run {{pascalCase entityName}}.decoder txt
 
 -- JSON round-trip test
 test> {{pascalCase entityName}}.tests.jsonRoundTrip = test.verify do
-  original =
-    { id = "test-123"
-{{#each fields}}
-{{#if (eq type "Text")}}
-    , {{name}} = "test-{{name}}"
-{{else if (eq type "Nat")}}
-    , {{name}} = 42
-{{else if (eq type "Int")}}
-    , {{name}} = +42
-{{else if (eq type "Float")}}
-    , {{name}} = 3.14
-{{else if (eq type "Boolean")}}
-    , {{name}} = true
-{{else if (startsWith type "Optional ")}}
-    , {{name}} = Some "test"
-{{else if (startsWith type "[")}}
-    , {{name}} = ["a", "b"]
-{{else}}
-    , {{name}} = todo "provide test value"
-{{/if}}
-{{/each}}
-    }
+  original = {{pascalCase entityName}} "test-123"{{#each fields}}{{#if (eq type "Text")}} "test-{{name}}"{{else if (eq type "Nat")}} 42{{else if (eq type "Int")}} +42{{else if (eq type "Float")}} 3.14{{else if (eq type "Boolean")}} true{{else if (startsWith type "Optional ")}} (Some "test"){{else if (startsWith type "[")}} ["a", "b"]{{else}} (todo "provide test value"){{/if}}{{/each}}
   encoded = {{pascalCase entityName}}.encode original
   decoded = {{pascalCase entityName}}.decode encoded
   ensureEqual original decoded

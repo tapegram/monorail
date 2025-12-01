@@ -37,6 +37,10 @@ module.exports = function (plop) {
   plop.setHelper('lowercase', (text) => text.toLowerCase());
   plop.setHelper('uppercase', (text) => text.toUpperCase());
 
+  // Helper to output literal curly braces (needed for Unison ability syntax)
+  plop.setHelper('openBrace', () => '{');
+  plop.setHelper('closeBrace', () => '}');
+
   // Comparison helpers
   plop.setHelper('eq', (a, b) => a === b);
   plop.setHelper('neq', (a, b) => a !== b);
