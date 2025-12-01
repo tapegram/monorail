@@ -26,7 +26,20 @@ And _briefly_ summarize how the chosen mode of operating works.
 
 ## WHERE TO PUT CODE and how to typecheck it
 
-Any time you are writing code, place it in a scratch file, `foo.u` (pick an appropriate file name based on the task).
+### CRITICAL: Single File Rule
+
+**ALL code for a project/feature goes in ONE scratch file** (e.g., `app.u` or `feature-name.u`).
+
+**Why?**
+- Unison's typechecker needs all definitions available together
+- Split files cause "function not found" errors when definitions reference each other
+- Simpler to track, load, and update one file
+
+**Workflow:**
+1. Generate code with plop → outputs to single file (e.g., `app.u`)
+2. All edits happen in that same file
+3. Typecheck the single file with MCP
+4. Load and update from that file in UCM
 
 As you are iterating, directly edit the file you've created. Use the MCP server to typecheck the file and run test> watch expressions. Do not pass large strings to the Unison MCP typechecking command.
 

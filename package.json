@@ -1,0 +1,20 @@
+{
+  "name": "monorail",
+  "version": "1.0.0",
+  "description": "Rails-like code generation framework for Unison web development",
+  "scripts": {
+    "plop": "plop",
+    "generate": "plop"
+  },
+  "devDependencies": {
+    "plop": "^4.0.1",
+    "pluralize": "^8.0.0"
+  },
+  "keywords": [
+    "unison",
+    "web",
+    "framework",
+    "code-generation"
+  ],
+  "license": "MIT"
+}

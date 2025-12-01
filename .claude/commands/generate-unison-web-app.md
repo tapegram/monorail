@@ -19,10 +19,10 @@ Provide the user with the following UCM commands to run:
 project.create <app-name>
 ```
 
-This creates a new Unison project. Then switch to it:
+This creates a new Unison project. Then switch to a feature branch (never work directly on main):
 
 ```
-project.switch <app-name>
+project.switch <app-name>/scaffold
 ```
 
 ### Step 2: Install Dependencies
@@ -44,15 +44,68 @@ Additional optional dependencies based on app needs:
 
 - `lib.install @unison/distributed` — for distributed systems
 
-### Step 3: Create Application Structure
+### Step 3: Check Library Versions
 
-1. Review app-architecture-example.md
+After installing, check what versions were installed:
 
-2. Scaffold the app using the templates/ and the example app for additional reference
+```
+list-project-libraries (via MCP)
+```
 
-3. Typecheck + show results.
+Note the exact version of `tapegram_html` (e.g., `tapegram_html_2_1_0`).
 
-**Workflow:**
+### Step 4: Generate Application Scaffold
 
-- During development, deploy to dev or stage: run `deploy.deployDev` or `deploy.deployStage` in UCM
-- To release to production: run `deploy.deployProd` in UCM
+Use plop to generate a **single app.u file** with all code:
+
+```bash
+plop -- unison-web-app --appName <AppName> --htmlLib <tapegram_html_version>
+```
+
+Example:
+```bash
+plop -- unison-web-app --appName MonorailDocs --htmlLib tapegram_html_2_1_0
+```
+
+This generates `app.u` containing:
+- Web utilities (page rendering, baseUrl, form helpers)
+- Deploy configuration and functions
+- Main entry point
+- Routes
+- Home page
+
+### Step 5: Typecheck and Update
+
+1. Typecheck the generated file:
+   ```
+   typecheck-code app.u (via MCP)
+   ```
+
+2. If it passes, tell user to load and update in UCM:
+   ```
+   load app.u
+   update
+   ```
+
+### Step 6: Deploy to Dev
+
+Test the scaffold by deploying to dev:
+
+```
+run deploy.deployDev
+```
+
+### Step 7: Merge to Main (User Action)
+
+Once the scaffold is working, the user merges to main:
+
+```
+project.switch <app-name>/main
+merge scaffold
+```
+
+## Key Points
+
+- **Single file**: All code goes in `app.u` - never split across multiple files
+- **Branch first**: Always work on a feature branch, never directly on main
+- **Typecheck before update**: Always typecheck with MCP before telling user to update

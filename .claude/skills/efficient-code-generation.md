@@ -1,15 +1,30 @@
 # Efficient Code Generation Strategy
 
-## Core Principle: Copy Templates, Make Edits
+## Core Principle: Use Plop Generators
 
 **NEVER stream long boilerplate code.** Instead:
 
-1. **Copy** the template file using Write tool
-2. **Edit** specific placeholders using Edit tool
-3. **Typecheck** to verify
-4. **Explain** the key concepts (teaching)
+1. **Run plop generator** - Use the appropriate generator for the task
+2. **Customize** - Make targeted edits to the generated code
+3. **Typecheck** - Verify with Unison MCP server
+4. **Explain** - Teach key concepts (separate from code)
 
-This saves massive tokens by reusing existing templates instead of regenerating them.
+This saves massive tokens by using pre-built templates with Handlebars substitution.
+
+---
+
+## Available Plop Generators
+
+```bash
+npm run plop                    # Show all generators interactively
+npm run plop crud-module        # Full CRUD (domain, repo, service, routes, pages)
+npm run plop ability-handler    # Port (ability) + adapter (handler)
+npm run plop json-mappers       # JSON encoder/decoder for a type
+npm run plop page-route         # Page + controller + route
+npm run plop api-client         # HTTP API client with ability
+npm run plop service-tests      # Tests for a service
+npm run plop unison-web-app     # Scaffold entire application
+```
 
 ---
 
@@ -22,156 +37,134 @@ Stream 200 lines of boilerplate code with minor changes
 
 ### ✅ EFFICIENT (New Way):
 ```
-1. Write template to scratch file
-2. Edit placeholder → actual value (3-5 edits typically)
-3. Typecheck
-4. Explain key concepts
+1. Run: npm run plop crud-module
+2. Answer prompts (or pipe answers for automation)
+3. Customize generated file with Edit tool
+4. Typecheck
+5. Explain key concepts
 ```
 
 ---
 
-## Template → Entity Mapping
+## Running Plop Generators
 
-All templates use placeholder patterns that should be replaced:
+### Interactive Mode
 
-| Template Placeholder | Replace With | Example |
-|---------------------|-------------|---------|
-| `MyEntity` | PascalCase entity name | `Workout` |
-| `<Entity>` | PascalCase entity name | `Workout` |
-| `myentities` | Lowercase plural | `workouts` |
-| `<entities>` | Lowercase plural | `workouts` |
-| `<entity>` | Lowercase singular | `workout` |
+Run plop and answer prompts interactively:
+
+```bash
+npm run plop crud-module
+```
+
+You'll be prompted for:
+- Entity name (e.g., "Workout")
+- Fields (interactive, one at a time)
+- Include JSON mappers? (yes/no)
+- HTML library version
+
+### CLI Mode (Non-Interactive) - RECOMMENDED FOR CLAUDE
+
+Use `plop-cli.js` for non-interactive generation with CLI arguments:
+
+```bash
+# Scaffold a new app
+node plop-cli.js unison-web-app --appName MyApp --htmlLib tapegram_html_2_0_0
+
+# Generate CRUD module
+node plop-cli.js crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true
+
+# Generate ability and handler
+node plop-cli.js ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]'
+
+# Generate JSON mappers
+node plop-cli.js json-mappers --typeName User --fields "id:Text,name:Text,age:Nat"
+
+# Generate page and route
+node plop-cli.js page-route --pageName Dashboard --routePath dashboard --httpMethod GET
+
+# Generate API client
+node plop-cli.js api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/user","responseType":"Json"}]'
+
+# Generate service tests
+node plop-cli.js service-tests --serviceName WorkoutService --entityName Workout --operations "create,get,listAll,update,delete"
+```
+
+**Field Formats:**
+- Simple: `name:Text,count:Nat,active:Boolean`
+- JSON: `[{"name":"title","type":"Text"},{"name":"count","type":"Nat"}]`
+
+**Operation Formats (for ability-handler, api-client):**
+- JSON array: `[{"name":"op","inputType":"Text","outputType":"()"}]`
+
+### Interactive Mode (for users)
+
+Run plop and answer prompts interactively:
+
+```bash
+npm run plop crud-module
+```
+
+You'll be prompted for:
+- Entity name (e.g., "Workout")
+- Fields (format: `name:Type,name:Type`)
+- Include JSON mappers? (yes/no)
+- HTML library version
 
 ---
 
-## Efficient CRUD Generation
+## Workflow Examples
 
-### Step 1: Copy Repository Template
+### Example 1: Generate CRUD Module for Workout
 
+```bash
+# Step 1: Run generator (CLI mode)
+node plop-cli.js crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_0_0
+
+# Step 2: Customize generated file
+Edit(workout-crud.u): Add any custom business logic
+
+# Step 3: Typecheck
+mcp__unison__typecheck-code with file path
+
+# Step 4: Explain
+"I've generated a complete CRUD module for Workout..."
 ```
-Write(.claude/templates/repository-ability.u → workout-crud.u)
+
+### Example 2: Generate API Client
+
+```bash
+# Step 1: Run generator (CLI mode)
+node plop-cli.js api-client --clientName Weather --baseUrl api.weather.com --operations '[{"name":"getCurrentWeather","httpMethod":"GET","endpoint":"/weather","responseType":"Weather"}]'
+
+# Step 2: Customize for specific API requirements
+Edit(weather-api-client.u): Add authentication headers, etc.
+
+# Step 3: Typecheck and explain
 ```
 
-### Step 2: Batch Edit Placeholders
+---
 
+## Customizing Generated Code
+
+After generation, use the Edit tool for customizations:
+
+### Adding Custom Fields
 ```
 Edit(workout-crud.u):
-  - MyEntity → Workout (replace_all=true)
-  - MyEntityRepository → WorkoutRepository (replace_all=true)
+  Add new field to type definition
 ```
 
-**Result:** Full repository ability in 2 operations instead of streaming 20 lines
-
-### Step 3: Append Repository Adapter
-
-```
-Read(.claude/templates/repository-adapter.u)
-Edit(workout-crud.u): Append adapter template with placeholders replaced
-```
-
-**Or more efficiently:**
-
-```
-Bash: cat .claude/templates/repository-adapter.u >> workout-crud.u
-Edit(workout-crud.u): Replace MyEntity → Workout in appended section
-```
-
-### Step 4: Continue Pattern for Other Layers
-
-Each layer follows same pattern:
-- Copy or append template
-- Batch edit placeholders
-- Typecheck
-
----
-
-## Field-Specific Edits
-
-For custom fields, use targeted edits:
-
-### Domain Type Fields
-
+### Custom Business Logic
 ```
 Edit(workout-crud.u):
-  old: "{ id : Text\n  , <field1> : <Type1>\n  , <field2> : <Type2>\n  }"
-  new: "{ id : Text\n  , name : Text\n  , reps : Nat\n  , duration : Optional Nat\n  }"
+  Replace todo placeholder with actual implementation
 ```
 
-### Service Create Function
-
+### Adjusting Routes
 ```
 Edit(workout-crud.u):
-  old: "entity = { id, <fields from input> }"
-  new: "entity = { id, name = input.name, reps = input.reps, duration = input.duration }"
+  Modify route paths or add middleware
 ```
-
----
-
-## Efficient JSON Mapper Generation
-
-JSON mappers have highly regular patterns:
-
-### Step 1: Copy Template Base
-
-```
-Write a minimal template to scratch file with:
-- encoder skeleton
-- decoder skeleton
-- encode/decode helpers
-```
-
-### Step 2: Generate Field Lists
-
-For a type with fields `{ id : Text, name : Text, reps : Nat }`:
-
-**Encoder fields (generated as text):**
-```
-    |> object.addText "id" value.id
-    |> object.addText "name" value.name
-    |> object.addNat "reps" value.reps
-```
-
-**Decoder fields (generated as text):**
-```
-  id = at! "id" Decoder.text
-  name = at! "name" Decoder.text
-  reps = at! "reps" Decoder.nat
-```
-
-### Step 3: Single Edit Insertion
-
-```
-Edit(workout-json.u):
-  old: "  |> todo \"add encoder fields\""
-  new: [generated encoder fields]
-
-Edit(workout-json.u):
-  old: "  todo \"add decoder fields\""
-  new: [generated decoder fields]
-```
-
-**Result:** Full JSON mappers with 2 edits instead of streaming 80 lines
-
----
-
-## Efficient Route Generation
-
-Routes follow a template pattern:
-
-### Copy Route Template
-```
-Read(.claude/templates/routes.u)
-```
-
-### Edit for Entity
-```
-Edit:
-  - examples → workouts
-  - Example → Workout
-  - exampleId → workoutId
-```
-
-**Result:** Full RESTful routes with 3 edits
 
 ---
 
@@ -186,15 +179,15 @@ Teaching should be SEPARATE from code generation:
 
 ### ✅ EFFICIENT:
 ```
-1. Copy template (1 operation)
-2. Edit placeholders (3-5 operations)
+1. Run plop generator (1 command)
+2. Customize if needed (1-2 edits)
 3. Typecheck (1 operation)
 4. THEN explain key concepts in text (not in code comments)
 ```
 
 **Teaching text example:**
 ```
-I've generated the WorkoutRepository port and adapter.
+I've generated the Workout CRUD module using plop.
 
 Key concepts:
 - The ability (port) defines WHAT operations we need
@@ -202,93 +195,62 @@ Key concepts:
 - Services depend on the port, not the database
 - This enables testing with fake adapters
 
-The pattern we used:
-1. Copied repository-ability.u template
-2. Replaced MyEntity → Workout
-3. Copied repository-adapter.u template
-4. Replaced placeholders
-5. Typechecked
+The generated file includes:
+- Domain type (Workout)
+- Repository ability (WorkoutRepository)
+- Repository adapter (storage.WorkoutRepository.run)
+- Fake repository for testing
+- Service with CRUD operations
+- Routes and pages
 
 This is the standard ports & adapters pattern!
 ```
 
 ---
 
-## Batch Operations
-
-Whenever possible, batch edits:
-
-### ❌ INEFFICIENT (Multiple Edit Calls):
-```
-Edit(file): MyEntity → Workout
-Edit(file): MyEntityRepository → WorkoutRepository
-Edit(file): myentities → workouts
-Edit(file): myentity → workout
-```
-
-### ✅ EFFICIENT (Single Edit with replace_all):
-```
-Edit(file, replace_all=true): MyEntity → Workout
-Edit(file, replace_all=true): myentities → workouts
-```
-
-Or use Bash for bulk replacements:
-```
-Bash: sed -i '' 's/MyEntity/Workout/g' workout-crud.u
-```
-
----
-
-## Template Composition
-
-For complex generations, build up file incrementally:
-
-```
-1. Write repository-ability.u → scratch.u
-2. Bash: cat repository-adapter.u >> scratch.u
-3. Bash: cat service.u >> scratch.u
-4. Edit(scratch.u, replace_all=true): MyEntity → Workout
-5. Edit(scratch.u): [field-specific edits]
-6. Typecheck
-```
-
-**Result:** All layers in one file with minimal edits
-
----
-
-## Token Savings Example
+## Token Savings
 
 ### Traditional Approach:
-- Stream repository ability: ~500 tokens
-- Stream repository adapter: ~800 tokens
+- Stream domain type: ~100 tokens
+- Stream repository ability: ~200 tokens
+- Stream repository adapter: ~400 tokens
 - Stream service: ~600 tokens
 - Stream routes: ~400 tokens
-- **Total: ~2,300 tokens**
+- Stream pages: ~500 tokens
+- **Total: ~2,200 tokens**
 
-### Efficient Approach:
-- Write repository-ability.u: ~50 tokens
-- Edit placeholders (3x): ~150 tokens
-- Append adapter: ~50 tokens
-- Edit placeholders (3x): ~150 tokens
-- Append service: ~50 tokens
-- Edit placeholders (3x): ~150 tokens
+### Plop Approach:
+- Run plop command: ~50 tokens
+- Customize (2 edits): ~100 tokens
 - Teaching explanation: ~200 tokens
-- **Total: ~800 tokens**
+- **Total: ~350 tokens**
 
-**Savings: 65% reduction in tokens**
+**Savings: 84% reduction in tokens**
 
 ---
 
-## When to Stream Code
+## Detecting Installed Library Versions
 
-Only stream code when:
+**CRITICAL:** Plop prompts for the HTML library version. Always check what's installed first:
 
-1. **Truly custom logic** (not template-based)
-2. **Teaching a new pattern** (first time showing it)
-3. **Complex conditionals** (not easily template-able)
-4. **Debugging** (showing specific fixes)
+```bash
+mcp__unison__list-project-libraries
+```
 
-For 90% of boilerplate generation, use templates + edits.
+Then provide the correct version (e.g., `tapegram_html_2_1_0`) when prompted.
+
+---
+
+## When to NOT Use Plop
+
+Use manual code generation only when:
+
+1. **Truly custom logic** (not matching any generator pattern)
+2. **Small additions** (adding one function to existing code)
+3. **Complex modifications** (changing generated code significantly)
+4. **Teaching a new pattern** (first time showing something unique)
+
+For 90% of boilerplate generation, use plop generators.
 
 ---
 
@@ -296,117 +258,44 @@ For 90% of boilerplate generation, use templates + edits.
 
 Before generating ANY code:
 
-- [ ] Does a template exist for this? → Use Write + Edit
-- [ ] Can I compose existing templates? → Use cat/append + Edit
-- [ ] Are there only 3-5 custom parts? → Use targeted edits
-- [ ] Am I repeating similar code? → Create a template
-- [ ] Would this be >50 lines streamed? → Use templates instead
+- [ ] Does a plop generator exist for this? → Run `npm run plop`
+- [ ] Do I know the entity/ability name? → Ready to answer prompts
+- [ ] Do I know the field types? → Ready for field prompts
+- [ ] Have I checked installed library versions? → Use correct htmlLib
 
 After generation:
 
-- [ ] Used templates where possible
-- [ ] Made targeted edits only
-- [ ] Batched edits when possible
-- [ ] Separated teaching from code generation
-- [ ] Typechecked efficiently
+- [ ] Generated file exists
+- [ ] Made any necessary customizations
+- [ ] Typechecked successfully
+- [ ] Explained key concepts to user
 
 ---
 
-## Detecting Installed Library Versions
+## Plop Templates Reference
 
-**CRITICAL:** Never hardcode library versions in generated code. Always detect what's actually installed.
+Templates are in `plop-templates/` as Handlebars files:
 
-### Before Generating ANY Code Using External Libraries:
+| Template | Generator | Creates |
+|----------|-----------|---------|
+| crud-module.u.hbs | crud-module | Domain, repo, service, routes, pages |
+| ability-handler.u.hbs | ability-handler | Ability + handler + fake |
+| json-mappers.u.hbs | json-mappers | Encoder, decoder, encode, decode |
+| json-mappers-standalone.u.hbs | json-mappers | Same as above (standalone file) |
+| page-route.u.hbs | page-route | Page, controller, route |
+| api-client.u.hbs | api-client | API ability + HTTP handler |
+| service-tests.u.hbs | service-tests | Test suite for service |
+| app-main.u.hbs | unison-web-app | Main app scaffold |
+| web-utilities.u.hbs | unison-web-app | Page utilities |
 
-1. **Check installed libraries first:**
-   ```
-   mcp__unison__list-project-libraries
-   ```
-
-2. **Use the EXACT version installed:**
-   ```
-   // If you see: tapegram_html_2_1_0
-   // Use: tapegram_html_2_1_0.div
-   // NOT: tapegram_html_2_0_0.div
-   ```
-
-3. **For common libraries, store the version:**
-   ```
-   When generating code that will reference a library multiple times,
-   note the installed version at the start of your generation.
-
-   Example: "I see you have tapegram_html_2_1_0 installed, I'll use that version."
-   ```
-
-### Common Library Patterns:
-
-| Library Pattern | How to Detect | Example Usage |
-|----------------|---------------|---------------|
-| `tapegram_html_*` | list-project-libraries → find tapegram_html_* | `tapegram_html_2_1_0.div` |
-| `tapegram_htmx_*` | list-project-libraries → find tapegram_htmx_* | `tapegram_htmx_3_4_0.hx_post` |
-
-### Anti-Pattern to Avoid:
-
-❌ **WRONG:**
-```
-Generating code with tapegram_html_2_0_0 because that's what the template shows
-```
-
-✅ **CORRECT:**
-```
-1. Check: mcp__unison__list-project-libraries
-2. Find: tapegram_html_2_1_0
-3. Generate: All code uses tapegram_html_2_1_0
-```
-
-### In Templates:
-
-Templates should use PLACEHOLDER patterns for library versions:
-
-```
--- Instead of hardcoding:
-tapegram_html_2_0_0.div [] [text "Hello"]
-
--- Use a comment placeholder:
-{- HTML_LIB -}.div [] [text "Hello"]
-
--- Then when copying template, replace {- HTML_LIB -} with actual version
-```
-
-### Workflow Integration:
-
-Add this step to EVERY code generation:
-
-1. ✅ Check installed library versions (if using external libs)
-2. ✅ Does a template exist for this? → Use Write + Edit
-3. ✅ Can I compose existing templates? → Use cat/append + Edit
-4. ✅ Are there only 3-5 custom parts? → Use targeted edits
-
----
-
-## Template Inventory
-
-Current templates available:
-
-| Template | Use For | Key Placeholders |
-|----------|---------|------------------|
-| repository-ability.u | Port definition | MyEntity, MyEntityRepository |
-| repository-adapter.u | Database adapter | MyEntity, myentities |
-| service.u | Business logic skeleton | MyService, Input, Output |
-| routes.u | RESTful routing | examples, Example, exampleId |
-| api-client.u | HTTP client | Api, Thing, baseUrl |
-| page-layout.u | HTML page structure | (use as-is) |
-| form-utilities.u | Form helpers | (use as-is) |
-| app-main.u | Application entry | appName |
-
-When generating code, **ALWAYS check this list first.**
+When making changes to templates, edit the `.hbs` files in `plop-templates/`.
 
 ---
 
 ## Summary
 
-**The Rule:** Copy templates, make edits, explain concepts.
+**The Rule:** Use plop generators, customize with Edit, explain concepts.
 
-**The Result:** 50-70% token reduction with same quality output.
+**The Result:** 80%+ token reduction with same quality output.
 
-**The Benefit:** Faster generation, more budget for teaching and iteration.
+**The Benefit:** Faster generation, consistent patterns, more budget for teaching.

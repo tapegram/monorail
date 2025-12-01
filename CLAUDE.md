@@ -2,21 +2,26 @@
 
 You are a Rails-like code generation framework for Unison web development called Monorail.
 
-## ⚡ EFFICIENCY FIRST
+## ⚡ EFFICIENCY FIRST: Use Plop for Code Generation
 
-**READ THIS BEFORE ANY CODE GENERATION:** @.claude/skills/efficient-code-generation.md
+**The Rule:** Use plop generators, then customize. Never stream long boilerplate.
 
-**The Rule:** Copy templates, make edits, explain concepts.
+**Plop generators are available for:**
+- `plop -- crud-module` - Full CRUD (domain, repository, service, routes, pages)
+- `plop -- ability-handler` - Port (ability) + adapter (handler)
+- `plop -- json-mappers` - JSON encoder/decoder for a type
+- `plop -- page-route` - Page, controller, and route
+- `plop -- api-client` - HTTP API client with ability
+- `plop -- service-tests` - Tests for a service
+- `plop -- unison-web-app` - Scaffold entire application
 
-**NEVER stream long boilerplate.** Instead:
+**Workflow:**
+1. Run the appropriate plop generator using CLI arguments (non-interactive)
+2. Customize the generated code with Edit tool
+3. Typecheck using Unison MCP server
+4. Explain key concepts (separate from code)
 
-1. Use Write tool to copy template files
-2. Use Edit tool for targeted placeholder replacements
-3. Use Bash for bulk operations when appropriate
-4. Typecheck to verify
-5. Explain key concepts (separate from code)
-
-**Token Savings:** 50-70% reduction by reusing templates instead of regenerating them.
+**Token Savings:** 70%+ reduction by using plop instead of streaming boilerplate.
 
 ---
 
@@ -50,14 +55,16 @@ Every piece of code you generate MUST follow these conventions:
 
 ### 3. Code Generation (Required)
 
-- **ALWAYS use slash commands** when appropriate:
-  - `/generate-crud-module` for CRUD resources
-  - `/generate-page-and-route` for new pages
-  - `/generate-json-mappers` for JSON encoding/decoding
-  - `/generate-api-client` for HTTP API clients
-  - `/generate-ability-and-handler` for ports/adapters
-  - `/add-testing-for-service` for service tests
+- **ALWAYS use plop generators** when appropriate:
+  - `plop -- crud-module` for CRUD resources
+  - `plop -- page-route` for new pages
+  - `plop -- json-mappers` for JSON encoding/decoding
+  - `plop -- api-client` for HTTP API clients
+  - `plop -- ability-handler` for ports/adapters
+  - `plop -- service-tests` for service tests
+- **Use CLI arguments** (non-interactive) - e.g., `plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0`
 - **ALWAYS typecheck** after generating code
+- **ALWAYS customize** generated code for specific needs
 - **ALWAYS create tests** for services
 
 ### 4. File Organization (Strict)
@@ -77,18 +84,62 @@ main/             -- Wiring up all of the ability handlers with routes. The sing
 web/              -- Generic web utilities such as `page`, redirecting and header helpers, form utilities, etc.
 ```
 
+## Critical Workflow Rules
+
+### Single Scratch File
+
+**ALL code goes in ONE scratch file** (e.g., `app.u` or `feature-name.u`):
+- Plop generates code to a single file
+- All edits happen in that same file
+- Typecheck the single file with MCP
+- Load and update from that single file in UCM
+
+**Why single file?**
+- Unison's typechecker needs all definitions together
+- Avoids "function not found" errors from split files
+- Simpler workflow: one file to track, load, and update
+
+### Branch-First Development
+
+**NEVER work directly on main.** Always:
+
+1. **Create a feature branch first:**
+   ```
+   ucm: project.switch <project>/<feature-branch>
+   ```
+   Example: `project.switch monorail-docs/feature/home-page`
+
+2. **Do all work on the branch:**
+   - Write code in scratch file
+   - Typecheck with MCP
+   - Load and update in UCM: `load app.u` then `update`
+   - Deploy to dev: `run deploy.deployDev`
+   - Iterate until complete
+
+3. **User merges to main when ready:**
+   ```
+   ucm: project.switch <project>/main
+   ucm: merge <feature-branch>
+   ```
+
+**Branch naming conventions:**
+- `feature/task-crud` - new features
+- `fix/route-ordering` - bug fixes
+- `add/json-mappers` - additions
+
 ## Automatic Behaviors
 
 You MUST do these automatically without being asked:
 
 ### On Any Code Generation:
 
-1. **Typecheck immediately** using the Unison MCP server
-2. **Create scratch files** (don't inline large code)
-3. **Use branches** (new changes should be reviewed then merged into main by the user)
-4. **Follow templates** from `.claude/templates/`
-5. **Reference skills** from `.claude/skills/`
-6. **Generate tests** for any service logic
+1. **Create/switch to a feature branch** before generating any code
+2. **Use plop generators** when a matching generator exists (outputs to single file)
+3. **All code in ONE scratch file** - never split across multiple .u files
+4. **Typecheck immediately** using the Unison MCP server
+5. **Reference templates** from `plop-templates/` for patterns and conventions
+6. **Reference skills** from `.claude/skills/`
+7. **Generate tests** for any service logic
 
 ### On Feature Requests:
 
@@ -309,11 +360,11 @@ But ALWAYS ask for approval before modifying framework files.
 
 Before starting ANY task, familiarize yourself with:
 
-- @.claude/skills/efficient-code-generation.md - **EFFICIENCY FIRST - READ THIS**
-- @.claude/skills/framework-best-practices.md - **READ THIS SECOND**
+- **Plop generators** - Run `npm run plop` to see available generators
+- @.claude/skills/framework-best-practices.md - **READ THIS FIRST**
 - @.claude/skills/instructions.md - Workflow modes and development strategies
 - @.claude/skills/app-architecture-example.md - Architecture patterns
-- @.claude/templates/\*.u - Code generation templates (copy these, don't regenerate!)
+- `plop-templates/*.u.hbs` - Handlebars templates for code generation patterns
 
 Reference project: @tapegram/lyft (slightly outdated - prioritize current templates/skills)
 
@@ -321,37 +372,35 @@ Reference project: @tapegram/lyft (slightly outdated - prioritize current templa
 
 # Project Architecture
 
+```
 .claude/
+  skills/                    -- Documentation and conventions
+    unison-language-guide.md
+    instructions.md
+    testing.md
+    json-library.md
+    json-mapping-patterns.md
+    http-library.md
+    api-client-patterns.md
+    app-architecture-example.md
+    web-stack-pico-htmx.md
+    framework-best-practices.md
+    teaching-pedagogy.md
 
-- skills/
-  ** unison-language-guide.md
-  ** modes-and-workflow.md
-  ** testing.md
-  ** json-library.md
-  ** json-mapping-patterns.md
-  ** http-library.md
-  ** api-client-patterns.md
-  ** app-architecture-example.md
-  ** web-stack-pico-htmx.md
-  ** snippets-and-scaffolds.md
+plop-templates/              -- Handlebars templates for code generation
+  crud-module.u.hbs          -- Full CRUD module template
+  ability-handler.u.hbs      -- Ability + handler template
+  json-mappers.u.hbs         -- JSON encoder/decoder template
+  json-mappers-standalone.u.hbs
+  page-route.u.hbs           -- Page + controller + route template
+  api-client.u.hbs           -- HTTP API client template
+  service-tests.u.hbs        -- Service test template
+  app-main.u.hbs             -- Application scaffold template
+  web-utilities.u.hbs        -- Web utilities template
 
-- commands/
-  ** generate-unison-web-app.md
-  ** generate-page-and-route.md
-  ** generate-crud-module.md
-  ** generate-json-mappers.md
-  ** generate-api-client.md
-  ** generate-ability-and-handler.md
-  \*\* add-testing-for-service.md
-
-- templates/
-  ** app-main.u
-  ** routes.u
-  ** page-layout.u
-  ** service.u
-  ** repository-ability.u
-  ** repository-adapter.u
-  \*\* api-client.u
+plopfile.js                  -- Plop generator definitions
+package.json                 -- npm dependencies (plop, pluralize)
+```
 
 ---
 
@@ -462,15 +511,49 @@ Deploy via Unison Cloud using generated deploy functions in `app-main.u`.
 
 @.claude/skills/app-architecture-example
 
-### Templates
+### Templates (Plop Generators)
 
-Use these templates to drive as much of the new code boilerplate and code style as possible. This is supposed to be a very opinionated, convention based web framework.
+Use plop generators for all boilerplate code. Templates are in `plop-templates/` as Handlebars files.
 
-@.claude/templates/app-main.u
-@.claude/templates/api-client.u
-@.claude/templates/form-utilities.u
-@.claude/templates/page-layout.u
-@.claude/templates/repository-ability.u
-@.claude/templates/repository-adapter.u
-@.claude/templates/routes.u
-@.claude/templates/service.u
+**Available generators:**
+```bash
+plop                        # Show all generators (interactive)
+plop -- crud-module         # Full CRUD module
+plop -- ability-handler     # Ability + handler
+plop -- json-mappers        # JSON encoder/decoder
+plop -- page-route          # Page + controller + route
+plop -- api-client          # HTTP API client
+plop -- service-tests       # Service tests
+plop -- unison-web-app      # Full app scaffold
+```
+
+**Non-Interactive CLI Usage (Preferred):**
+
+Always use CLI arguments to avoid interactive prompts. Syntax: `plop -- <generator> --arg value`
+
+```bash
+# Scaffold a new web app
+plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
+
+# Generate CRUD module (fields as comma-separated name:Type pairs)
+plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0
+
+# Generate JSON mappers
+plop -- json-mappers --typeName User --fields "id:Text,email:Text,name:Text"
+
+# Generate page and route
+plop -- page-route --pageName About --routePath about --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0
+
+# Generate ability and handler (operations as JSON)
+plop -- ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]' --adapterType "HTTP API" --includeFake true
+
+# Generate API client
+plop -- api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/users","responseType":"Json"}]'
+
+# Generate service tests
+plop -- service-tests --serviceName WorkoutService --entityName Workout --repositoryName WorkoutRepository --operations create,get,listAll,update,delete
+```
+
+**Field Format Options:**
+- Simple: `"name:Text,count:Nat,active:Boolean"`
+- JSON: `'[{"name":"title","type":"Text"},{"name":"count","type":"Nat"}]'`
