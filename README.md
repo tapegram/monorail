@@ -25,6 +25,64 @@ Monorail is an opinionated, convention-based web framework that brings Rails-sty
 /generate-json-mappers
 ```
 
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
+- [Unison](https://www.unison-lang.org/docs/install/) installed
+- [Claude Code](https://claude.ai/code) installed
+- A Unison Cloud account (for deployment)
+
+### Create Your First App
+
+**1. Open Claude Code in this directory:**
+```bash
+git clone https://github.com/tapegram/monorail.git
+cd monorail
+claude
+```
+
+**2. Ask Claude to generate your app:**
+```
+/generate-unison-web-app
+```
+
+Claude will prompt you for:
+- App name (e.g., `MyApp`)
+- Description
+
+**3. In UCM, create the project and install dependencies:**
+```
+project.create my-app
+lib.install @unison/http
+lib.install @unison/routes
+lib.install @tapegram/html
+lib.install @tapegram/htmx
+lib.install @unison/json
+lib.install @unison/cloud
+```
+
+**4. Switch to a feature branch for development:**
+```
+project.switch my-app/scaffold
+```
+
+**5. Load and update the generated code:**
+```
+load app.u
+update
+```
+
+**6. Deploy to dev and test:**
+```
+run deploy.deployDev
+```
+
+You now have a working Unison web app deployed to Unison Cloud!
+
+---
+
 ```
 ┌─────────────────────────────────────────────┐
 │ HTTP Request │
