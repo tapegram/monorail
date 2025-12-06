@@ -77,19 +77,68 @@ renderPage content = page.full [content]
 
 ### 3. Protect Routes with Middleware
 
-```unison
--- Protect a single route
-protectedRoute = do
-  auth.middleware.requireLogin do
-    noCapture GET (Parser.s "dashboard")
-    -- ... render dashboard
-    ok.html (toText dashboardHtml)
+**IMPORTANT: Choose the right pattern based on your app's needs.**
 
--- Or protect a group of routes
-protectedRoutes = do
+#### Pattern A: Fully Protected App (All Routes Require Login)
+
+Use `auth.middleware.requireLogin` when your ENTIRE app requires authentication:
+
+```unison
+-- Wrap ALL routes with the middleware
+app.routes db = do
   auth.middleware.requireLogin do
     dashboard <|> settings <|> profile
 ```
+
+#### Pattern B: Mixed Public/Protected Routes (RECOMMENDED)
+
+When your app has BOTH public and protected routes, you MUST match the route FIRST, then check auth. Otherwise, the auth check runs before route matching, blocking public routes.
+
+```unison
+app.routes db =
+  use Parser / s
+  use Route <|>
+
+  -- Helper to check login status
+  checkLoggedIn : '{Route, auth.Auth, Remote} Boolean
+  checkLoggedIn = do
+    auth.AuthService.getSessionFromCookie Remote.now() |> isSome
+
+  -- PUBLIC: Anyone can view
+  home = do
+    noCapture GET (s "")
+    isLoggedIn = checkLoggedIn()
+    items = listAll()
+    html = renderList isLoggedIn items
+    ok.html (toText html)
+
+  -- PROTECTED: Match route FIRST, then check auth
+  createItem = do
+    noCapture POST (s "items")           -- 1. Match route first
+    isLoggedIn = checkLoggedIn()          -- 2. Then check auth
+    if Boolean.not isLoggedIn then
+      auth.redirect (baseUrl() Path./ "login")  -- Note: Use Path./ not Parser./
+    else
+      -- 3. Protected logic here
+      formData = getFormData()
+      created = create formData
+      ok.html (toText (renderItem created))
+
+  -- PROTECTED: Same pattern for delete
+  deleteItem = do
+    itemId = route DELETE (s "items" / Parser.text)  -- 1. Match first
+    isLoggedIn = checkLoggedIn()                      -- 2. Check auth
+    if Boolean.not isLoggedIn then
+      auth.redirect (baseUrl() Path./ "login")
+    else
+      delete itemId
+      ok.text ""
+
+  -- Combine routes
+  auth.routes renderPage <|> createItem <|> deleteItem <|> home
+```
+
+**Why this matters**: If you wrap the route matcher inside `requireLogin`, the auth check runs BEFORE checking if the URL even matches, causing ALL requests to trigger login redirects.
 
 ### 4. Access Current User in Routes
 

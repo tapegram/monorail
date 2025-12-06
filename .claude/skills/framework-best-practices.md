@@ -708,6 +708,53 @@ isCompleted = Boolean.fromText (form.getOnly! "completed" formData)
 
 **Note:** The crud-module template handles this automatically for Boolean fields.
 
+### Pitfall 9: Path./ vs Parser./ Ambiguity
+
+**Problem:** When `use Parser / s` is in scope (common in routes), using `/` for Path operations picks the wrong function.
+
+**Error:** `has type: Path but I expected: Parser a b`
+
+**Solution:** Use `Path./` explicitly when building paths in route handlers:
+
+```unison
+app.routes db =
+  use Parser / s  -- This brings Parser./ into scope as just "/"
+
+  -- WRONG: Uses Parser./ which expects Parser types
+  auth.redirect (baseUrl() / "login")
+
+  -- CORRECT: Explicitly use Path./
+  auth.redirect (baseUrl() Path./ "login")
+```
+
+### Pitfall 10: Auth Middleware Wrapping Route Matcher
+
+**Problem:** Using `auth.middleware.requireLogin` to wrap the entire route including the route matcher causes auth checks to run BEFORE checking if the route matches. This blocks ALL requests, even to public routes.
+
+**Wrong pattern:**
+```unison
+-- Auth check runs before route matching - breaks public routes!
+createItem = do
+  auth.middleware.requireLogin do
+    noCapture POST (s "items")  -- Never reached for unauthenticated users
+    ...
+```
+
+**Correct pattern for mixed public/protected apps:**
+```unison
+-- Match route FIRST, then check auth
+createItem = do
+  noCapture POST (s "items")           -- 1. Match route first
+  isLoggedIn = checkLoggedIn()          -- 2. Then check auth
+  if Boolean.not isLoggedIn then
+    auth.redirect (baseUrl() Path./ "login")
+  else
+    -- 3. Protected logic here
+    ...
+```
+
+**Reference:** See @.claude/skills/authentication.md for complete patterns.
+
 ---
 
 ## Summary Checklist

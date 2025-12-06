@@ -736,10 +736,23 @@ plop -- json-mappers --typeName Comment --fields "id:Text,body:Text" --appendTo 
 plop -- page-route --pageName Settings --routePath settings --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0 --appendTo app.u
 ```
 
-**Important CLI Behavior:**
-- When creating a NEW file (not appending), you must explicitly pass `--appendTo ""`
-- Otherwise plop will prompt interactively and may error out
-- Example: `plop -- crud-module --entityName Task --fields "name:Text" --appendTo ""`
+**⚠️ CRITICAL CLI Behavior:**
+- **ALWAYS pass `--appendTo`** - either with a filename or empty string `""`
+- When creating a NEW file: `--appendTo ""`
+- When appending to existing file: `--appendTo app.u`
+- Without this, plop will prompt interactively and fail in non-interactive environments
+
+**Examples with all required args:**
+```bash
+# Create NEW auth.u file (note: --appendTo "")
+plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName session --sessionDays 30 --minPasswordLength 8 --saltPrefix myapp --appendTo ""
+
+# Create NEW crud file
+plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo ""
+
+# Append to existing file
+plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+```
 
 **Note about json-mappers:**
 - The `json-mappers` generator includes the type definition in the output
