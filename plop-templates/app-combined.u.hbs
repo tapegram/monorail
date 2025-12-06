@@ -58,7 +58,7 @@ web.page.page.full children =
         , link [rel "preconnect", href "https://unpkg.com/"]
         , link
             [ rel "stylesheet"
-            , href "https://unpkg.com/@picocss/pico@latest/css/pico.classless.min.css"
+            , href "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
             ]
         , script [src "https://unpkg.com/htmx.org@1.9.12"] []
         , page.css
@@ -73,12 +73,13 @@ web.page.css : Html
 web.page.css = {{htmlLib}}.style [] [unsafeText css.raw]
 
 web.page.css.raw : Text
-web.page.css.raw =
-  ":not(:defined) { visibility: hidden; }\n" Text.++
-  "[data-loading] { display: none; }\n" Text.++
-  ".htmx-indicator { opacity: 0; transition: opacity 500ms ease-in; }\n" Text.++
-  ".htmx-request .htmx-indicator { opacity: 1; }\n" Text.++
-  ".htmx-request.htmx-indicator { opacity: 1; }"
+web.page.css.raw = """
+:not(:defined) { visibility: hidden; }
+[data-loading] { display: none; }
+.htmx-indicator { opacity: 0; transition: opacity 500ms ease-in; }
+.htmx-request .htmx-indicator { opacity: 1; }
+.htmx-request.htmx-indicator { opacity: 1; }
+"""
 
 -- =============================================================================
 -- BASE URL HELPER
