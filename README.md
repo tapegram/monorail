@@ -5,24 +5,20 @@
 Monorail is an opinionated, convention-based web framework that brings Rails-style productivity to Unison development. Built as a Claude Code configuration, it generates clean, testable, production-ready web applications following ports & adapters architecture.
 
 ```bash
-# Generate a complete web app in seconds
-/generate-unison-web-app
+# Just ask Claude to create your app:
+"Create a todo list app called MyTasks"
 
-# Your app name? MyApp
+# ✨ Claude will:
+#   - Prompt you to create the project in UCM
+#   - Auto-install all dependencies (@unison/http, @unison/routes, etc.)
+#   - Generate app skeleton with routes, pages, deploy functions
+#   - Page layout with PicoCSS v2 (classless) + htmx
+#   - Typecheck everything automatically
 
-# ✨ Generated:
-#   - Application skeleton (main, routes, deploy)
-#   - Ports & adapters architecture
-#   - Example route (Hello World)
-#   - Page layout with PicoCSS + htmx
-#   - Form utilities and web helpers
-#   - Deploy functions (dev, stage, prod)
-#   - All typechecked and ready to deploy!
-
-# Now add features with:
-/generate-crud-module
-/generate-page-and-route
-/generate-json-mappers
+# Then add features naturally:
+"Add a Task resource with title, completed, and dueDate"
+"Create a dashboard page showing task statistics"
+"Add JSON API endpoints for tasks"
 ```
 
 ---
@@ -43,43 +39,40 @@ cd monorail
 claude
 ```
 
-**2. Ask Claude to generate your app:**
+**2. Ask Claude to scaffold your app:**
 ```
-/generate-unison-web-app
-```
-
-Claude will prompt you for:
-- App name (e.g., `MyApp`)
-- Description
-
-**3. In UCM, create the project and install dependencies:**
-```
-project.create my-app
-lib.install @unison/http
-lib.install @unison/routes
-lib.install @tapegram/html
-lib.install @tapegram/htmx
-lib.install @unison/json
-lib.install @unison/cloud
+Create a todo list app called MyTasks
 ```
 
-**4. Switch to a feature branch for development:**
-```
-project.switch my-app/scaffold
-```
+Claude will:
+- Prompt you to create the project in UCM (e.g., `project.create my-tasks`)
+- **Automatically install all required dependencies** via MCP
+- Generate the app scaffold with routes, pages, and deployment functions
+- Typecheck everything to ensure it works
 
-**5. Load and update the generated code:**
+**3. Create a feature branch and load your code:**
 ```
+branch scaffold
 load app.u
 update
 ```
 
-**6. Deploy to dev and test:**
+**4. Deploy to dev and test:**
 ```
 run deploy.deployDev
 ```
 
 You now have a working Unison web app deployed to Unison Cloud!
+
+### What Gets Auto-Installed
+
+When you ask Claude to create an app, it automatically installs:
+- `@unison/http` - HTTP client/server
+- `@unison/routes` - URL routing
+- `@unison/cloud` - Cloud deployment
+- `@unison/json` - JSON encoding/decoding
+- `@tapegram/html` - HTML generation
+- `@tapegram/htmx` - htmx attributes
 
 ---
 
@@ -310,34 +303,28 @@ This saves 70-85% of tokens while generating the same quality code.
 ### Typical Feature Development
 
 ```bash
-# 1. Generate the web app (first time)
-/generate-unison-web-app
-> App name: BlogApp
+# 1. Ask Claude to create your app
+"Create a blog app called BlogApp"
+# Claude prompts you to create project, then auto-installs dependencies
 
-# 2. Generate a CRUD module for your first feature
-/generate-crud-module
-> Entity: Post
-> Fields: title: Text, body: Text, publishedAt: Optional Instant
-> JSON mappers: yes
-
-# 3. Review generated code
-# Claude shows you each layer with explanations
-
-# 4. Add tests
-/add-testing-for-service
-> Service: PostService
-> Functions to test: create, publish, delete
-
-# 5. Load into UCM
-ucm> load blog-app.u
-ucm> load post-crud.u
+# 2. In UCM, create a branch and load generated code
+ucm> branch scaffold
+ucm> load app.u
 ucm> update
 
-# 6. Run tests
-ucm> test.run PostService.tests
+# 3. Ask Claude to generate a CRUD module
+"Add a Post resource with title: Text, body: Text, publishedAt: Optional Instant"
+# Claude generates domain, service, routes, pages, and JSON mappers
 
-# 7. Deploy
-ucm> run deploy.deployStage
+# 4. Load the new code
+ucm> load app.u
+ucm> update
+
+# 5. Run tests
+ucm> test
+
+# 6. Deploy to dev
+ucm> run deploy.deployDev
 
 # Done! Your feature is live.
 ```
@@ -444,12 +431,13 @@ Contributions welcome:
 # Clone and start
 git clone https://github.com/tapegram/monorail.git
 cd monorail
-claude-code
+claude
 
 # In Claude Code:
-/generate-unison-web-app
+"Create a todo list app called MyApp"
 
-# Let's build something! 🎉
+# Claude handles the rest - prompts for project creation,
+# auto-installs dependencies, generates your app!
 ```
 
 ---
