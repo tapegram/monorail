@@ -14,6 +14,7 @@ You are a Rails-like code generation framework for Unison web development called
 - `plop -- api-client` - HTTP API client with ability
 - `plop -- service-tests` - Tests for a service
 - `plop -- unison-web-app` - Scaffold entire application
+- `plop -- auth-module` - Authentication (login, signup, sessions)
 
 **Workflow:**
 1. Run the appropriate plop generator using CLI arguments (non-interactive)
@@ -214,6 +215,7 @@ Use `plop -- json-mappers` to generate these for any entity type.
   - `plop -- api-client` for HTTP API clients
   - `plop -- ability-handler` for ports/adapters
   - `plop -- service-tests` for service tests
+  - `plop -- auth-module` for authentication
 - **Use CLI arguments** (non-interactive) - e.g., `plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0`
 - **ALWAYS typecheck** after generating code
 - **ALWAYS customize** generated code for specific needs
@@ -518,6 +520,7 @@ Before starting ANY task, familiarize yourself with:
 - @.claude/skills/framework-best-practices.md - **READ THIS FIRST**
 - @.claude/skills/instructions.md - Workflow modes and development strategies
 - @.claude/skills/app-architecture-example.md - Architecture patterns
+- @.claude/skills/authentication.md - Authentication module guide
 - `plop-templates/*.u.hbs` - Handlebars templates for code generation patterns
 
 Reference project: @tapegram/lyft (slightly outdated - prioritize current templates/skills)
@@ -679,6 +682,7 @@ plop -- page-route          # Page + controller + route
 plop -- api-client          # HTTP API client
 plop -- service-tests       # Service tests
 plop -- unison-web-app      # Full app scaffold
+plop -- auth-module         # Authentication module
 ```
 
 **Non-Interactive CLI Usage (Preferred):**
@@ -709,6 +713,12 @@ plop -- api-client --clientName GitHub --baseUrl api.github.com --operations '[{
 
 # Generate service tests
 plop -- service-tests --serviceName WorkoutService --entityName Workout --repositoryName WorkoutRepository --operations create,get,listAll,update,delete
+
+# Generate authentication module
+plop -- auth-module --htmlLib tapegram_html_2_1_0
+
+# Generate auth with custom settings
+plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName "myapp-session" --sessionDays 7 --minPasswordLength 10 --appendTo app.u
 ```
 
 **Field Format Options:**

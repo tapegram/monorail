@@ -455,6 +455,62 @@ module.exports = function (plop) {
   });
 
   // ---------------------------------------------------------------------------
+  // Auth Module Generator
+  // ---------------------------------------------------------------------------
+  plop.setGenerator('auth-module', {
+    description: 'Generate authentication module (login, signup, sessions)',
+    prompts: [
+      {
+        type: 'input',
+        name: 'htmlLib',
+        message: 'HTML library version:',
+        default: 'tapegram_html_2_0_0',
+      },
+      {
+        type: 'input',
+        name: 'cookieName',
+        message: 'Session cookie name:',
+        default: 'session',
+      },
+      {
+        type: 'input',
+        name: 'sessionDays',
+        message: 'Session duration (days):',
+        default: '30',
+      },
+      {
+        type: 'input',
+        name: 'minPasswordLength',
+        message: 'Minimum password length:',
+        default: '8',
+      },
+      {
+        type: 'input',
+        name: 'saltPrefix',
+        message: 'Salt prefix (for password hashing):',
+        default: 'monorail',
+      },
+      {
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
+      },
+    ],
+    actions: (data) => {
+      const targetPath = data.appendTo || 'auth.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/auth-module.u.hbs',
+        },
+      ];
+    },
+  });
+
+  // ---------------------------------------------------------------------------
   // Web App Scaffold Generator
   // ---------------------------------------------------------------------------
   plop.setGenerator('unison-web-app', {
