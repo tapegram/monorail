@@ -434,8 +434,8 @@ auth.redirect path =
 -- =============================================================================
 
 auth.routes :
-  (Html ->{{openBrace}}Route, Exception} Html) ->
-  '{{openBrace}}Route, Exception, auth.Auth, Remote, Random, Log} ()
+  (Html ->{{openBrace}}Route, Exception, Environment.Config} Html) ->
+  '{{openBrace}}Route, Exception, auth.Auth, Remote, Random, Log, Environment.Config} ()
 auth.routes renderPage =
   use Route <|>
   use {{htmlLib}} toText

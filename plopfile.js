@@ -192,20 +192,31 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase entityName}}-crud.u';
-      const actionType = data.appendTo ? 'append' : 'add';
 
-      const actions = [
-        {
-          type: actionType,
+      const actions = [];
+
+      if (data.appendTo) {
+        // Append to existing file
+        actions.push({
+          type: 'append',
+          path: targetPath,
+          pattern: /$/,  // Append at end of file
+          templateFile: 'plop-templates/crud-module.u.hbs',
+        });
+      } else {
+        // Create new file
+        actions.push({
+          type: 'add',
           path: targetPath,
           templateFile: 'plop-templates/crud-module.u.hbs',
-        },
-      ];
+        });
+      }
 
       if (data.includeJson) {
         actions.push({
           type: 'append',
           path: targetPath,
+          pattern: /$/,  // Append at end of file
           templateFile: 'plop-templates/json-mappers.u.hbs',
         });
       }
@@ -254,14 +265,25 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase abilityName}}-port-adapter.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/ability-handler.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/ability-handler.u.hbs',
+          },
+        ];
+      } else {
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/ability-handler.u.hbs',
+          },
+        ];
+      }
     },
   });
 
@@ -293,14 +315,25 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase typeName}}-json.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
+          },
+        ];
+      } else {
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
+          },
+        ];
+      }
     },
   });
 
@@ -349,14 +382,25 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase pageName}}-page.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/page-route.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/page-route.u.hbs',
+          },
+        ];
+      } else {
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/page-route.u.hbs',
+          },
+        ];
+      }
     },
   });
 
@@ -394,14 +438,25 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase clientName}}-api-client.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/api-client.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/api-client.u.hbs',
+          },
+        ];
+      } else {
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/api-client.u.hbs',
+          },
+        ];
+      }
     },
   });
 
@@ -443,14 +498,25 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || '{{kebabCase serviceName}}-tests.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/service-tests.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/service-tests.u.hbs',
+          },
+        ];
+      } else {
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/service-tests.u.hbs',
+          },
+        ];
+      }
     },
   });
 
@@ -499,14 +565,27 @@ module.exports = function (plop) {
     ],
     actions: (data) => {
       const targetPath = data.appendTo || 'auth.u';
-      const actionType = data.appendTo ? 'append' : 'add';
-      return [
-        {
-          type: actionType,
-          path: targetPath,
-          templateFile: 'plop-templates/auth-module.u.hbs',
-        },
-      ];
+
+      if (data.appendTo) {
+        // Append to existing file - use pattern to avoid regex issues with content
+        return [
+          {
+            type: 'append',
+            path: targetPath,
+            pattern: /$/,  // Append at end of file
+            templateFile: 'plop-templates/auth-module.u.hbs',
+          },
+        ];
+      } else {
+        // Create new file
+        return [
+          {
+            type: 'add',
+            path: targetPath,
+            templateFile: 'plop-templates/auth-module.u.hbs',
+          },
+        ];
+      }
     },
   });
 
