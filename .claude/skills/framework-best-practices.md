@@ -692,6 +692,22 @@ Then use the Edit tool on the restored file.
 - `req` for request
 - `resp` for response
 
+### Pitfall 8: Boolean.fromText Doesn't Exist
+
+**Problem:** Trying to parse a Boolean from form input using `Boolean.fromText`.
+
+**Solution:** Unison doesn't have `Boolean.fromText`. Compare the string directly:
+
+```unison
+-- CORRECT:
+isCompleted = (form.getOnly! "completed" formData == "true")
+
+-- WRONG (doesn't exist):
+isCompleted = Boolean.fromText (form.getOnly! "completed" formData)
+```
+
+**Note:** The crud-module template handles this automatically for Boolean fields.
+
 ---
 
 ## Summary Checklist

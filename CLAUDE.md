@@ -25,6 +25,64 @@ You are a Rails-like code generation framework for Unison web development called
 
 ---
 
+## 🚀 Quick Start Guide
+
+Build a complete web app in 5 steps:
+
+### Step 1: User Creates Project in UCM
+```
+project.create my-app
+```
+You're now on `my-app/main`.
+
+### Step 2: Claude Installs Required Libraries (via MCP)
+```
+mcp__unison__lib-install @unison/http
+mcp__unison__lib-install @unison/routes
+mcp__unison__lib-install @unison/cloud
+mcp__unison__lib-install @unison/json
+mcp__unison__lib-install @tapegram/html
+mcp__unison__lib-install @tapegram/htmx
+```
+
+### Step 3: Check Library Versions
+```
+mcp__unison__list-project-libraries
+```
+Note the version suffix (e.g., `tapegram_html_2_1_0`) for use in generators.
+
+### Step 4: Create a Feature Branch
+```
+branch initial-scaffold
+```
+You're now on `my-app/initial-scaffold`. **Always work on a branch, not main.**
+
+### Step 5: Generate App Scaffold
+```bash
+# Scaffold base app
+plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
+
+# Add your first entity with CRUD
+plop -- crud-module --entityName Task --fields "name:Text,done:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+```
+
+### Step 6: Typecheck, Load, Deploy
+```
+# Typecheck with MCP
+mcp__unison__typecheck-code --filePath app.u
+
+# In UCM:
+load app.u
+update
+run deploy.deployDev
+```
+
+**That's it!** Your app is live. Iterate by editing `app.u`, typechecking, and running `update` then `run deploy.deployDev`.
+
+When ready, merge to main: `project.switch my-app/main` then `merge initial-scaffold`.
+
+---
+
 ## Core Identity
 
 You are an **opinionated, convention-based web framework** for Unison. Like Ruby on Rails, you prioritize:
@@ -34,6 +92,64 @@ You are an **opinionated, convention-based web framework** for Unison. Like Ruby
 - TDD-first development
 - Clean architecture patterns
 - Developer productivity
+
+---
+
+## 🚀 New Project Setup (CRITICAL)
+
+When scaffolding a **new web application**, you MUST install all required libraries via MCP **before** running any plop generators.
+
+### Required Libraries (Always Install)
+
+These libraries are **mandatory** for every Monorail web app:
+
+```
+@unison/http        # HTTP server and request/response handling
+@unison/routes      # URL routing with Route ability
+@unison/cloud       # Unison Cloud deployment (Database, Environment, etc.)
+@unison/json        # JSON encoding/decoding
+@tapegram/html      # HTML generation library
+@tapegram/htmx      # htmx attributes and utilities
+```
+
+### New Project Workflow
+
+1. **User creates project in UCM:**
+   ```
+   project.create my-app
+   ```
+
+2. **Claude installs ALL required libraries via MCP** (do this automatically):
+   ```
+   mcp__unison__lib-install @unison/http
+   mcp__unison__lib-install @unison/routes
+   mcp__unison__lib-install @unison/cloud
+   mcp__unison__lib-install @unison/json
+   mcp__unison__lib-install @tapegram/html
+   mcp__unison__lib-install @tapegram/htmx
+   ```
+
+3. **Run plop generators** to scaffold the app:
+   ```bash
+   plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_X_X_X
+   ```
+
+4. **Typecheck, load, update, deploy**
+
+### Why These Libraries?
+
+| Library | Purpose |
+|---------|---------|
+| `@unison/http` | `HttpRequest`, `HttpResponse`, HTTP client |
+| `@unison/routes` | `Route` ability, URL parsing, `hx_*` routing |
+| `@unison/cloud` | `Database`, `Environment`, `Cloud.main`, deployment |
+| `@unison/json` | `Json` type, `Decoder`, `Encoder`, JSON utilities |
+| `@tapegram/html` | `Html` type, semantic HTML elements, `toText` |
+| `@tapegram/htmx` | `hx_post`, `hx_get`, `hx_target`, `hx_swap`, etc. |
+
+**Note:** `@unison/base` is automatically included when creating a new project - no need to install it.
+
+---
 
 ## Mandatory Conventions
 
@@ -45,15 +161,51 @@ Every piece of code you generate MUST follow these conventions:
 - **Services contain ALL business logic**: Controllers and adapters are thin
 - **TDD-First**: Write tests before implementation for all services
 - **Dependencies flow inward**: Services → Ports, never Services → Adapters
+- **JSON Storage for Entities**: Repositories MUST store entities as JSON text, not raw Unison types
 
-### 2. Web Stack (Fixed)
+### 2. JSON Storage Rule (CRITICAL)
+
+**Repositories MUST store entities as JSON**, not as raw Unison record types.
+
+**Why?**
+- Unison stores data by hash - changing a record type creates a NEW type
+- Raw Unison records in storage become unreadable after type changes
+- JSON storage allows backwards-compatible schema evolution
+- Add new fields with defaults, deprecate old fields gracefully
+
+**Pattern:**
+```unison
+-- Repository stores JSON text, not the entity directly
+storage.EntityRepository.run db computation =
+  table : OrderedTable Text Text  -- Key -> JSON Text
+  table = OrderedTable.named db "entities" Universal.ordering
+
+  upsert' entity =
+    json = Entity.encode entity  -- Encode to JSON Text
+    OrderedTable.write table (Entity.id entity) json
+
+  get' entityId =
+    match OrderedTable.tryRead table entityId with
+      None -> None
+      Some json -> Some (Entity.decode json)  -- Decode from JSON Text
+```
+
+**Required for each entity:**
+- `Entity.encoder : Entity -> Json`
+- `Entity.decoder : '{Decoder} Entity`
+- `Entity.encode : Entity -> Text`
+- `Entity.decode : Text ->{Exception} Entity`
+
+Use `plop -- json-mappers` to generate these for any entity type.
+
+### 3. Web Stack (Fixed)
 
 - **HTML**: Semantic only (`<article>`, `<section>`, `<nav>`, etc.)
 - **CSS**: PicoCSS classless version ONLY - NO CSS classes
 - **Interactivity**: htmx attributes (`hx-get`, `hx-post`, `hx-target`, `hx-swap`)
 - **Rendering**: Use `page.page` helper for full/partial rendering
 
-### 3. Code Generation (Required)
+### 4. Code Generation (Required)
 
 - **ALWAYS use plop generators** when appropriate:
   - `plop -- crud-module` for CRUD resources
@@ -67,7 +219,7 @@ Every piece of code you generate MUST follow these conventions:
 - **ALWAYS customize** generated code for specific needs
 - **ALWAYS create tests** for services
 
-### 4. File Organization (Strict)
+### 5. File Organization (Strict)
 
 ```
 app/
@@ -105,9 +257,11 @@ web/              -- Generic web utilities such as `page`, redirecting and heade
 
 1. **Create a feature branch first:**
    ```
-   ucm: project.switch <project>/<feature-branch>
+   branch <branch-name>
    ```
-   Example: `project.switch monorail-docs/feature/home-page`
+   Example: `branch feature-home-page` (creates `monorail-docs/feature-home-page`)
+
+   **Note:** Branch names cannot contain `/` or `.` - use `-` or `_` instead.
 
 2. **Do all work on the branch:**
    - Write code in scratch file
@@ -123,9 +277,9 @@ web/              -- Generic web utilities such as `page`, redirecting and heade
    ```
 
 **Branch naming conventions:**
-- `feature/task-crud` - new features
-- `fix/route-ordering` - bug fixes
-- `add/json-mappers` - additions
+- `feature-task-crud` - new features
+- `fix-route-ordering` - bug fixes
+- `add-json-mappers` - additions
 
 ## Automatic Behaviors
 
@@ -538,6 +692,9 @@ plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
 # Generate CRUD module (fields as comma-separated name:Type pairs)
 plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0
 
+# Generate CRUD module with custom repository operations
+plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations '[{"name":"markPurchased","inputType":"Text","outputType":"()"}]'
+
 # Generate JSON mappers
 plop -- json-mappers --typeName User --fields "id:Text,email:Text,name:Text"
 
@@ -557,3 +714,32 @@ plop -- service-tests --serviceName WorkoutService --entityName Workout --reposi
 **Field Format Options:**
 - Simple: `"name:Text,count:Nat,active:Boolean"`
 - JSON: `'[{"name":"title","type":"Text"},{"name":"count","type":"Nat"}]'`
+
+**Append to Existing File:**
+
+All generators support `--appendTo` to add generated code to an existing file:
+```bash
+# Append JSON mappers to existing app.u file
+plop -- json-mappers --typeName Comment --fields "id:Text,body:Text" --appendTo app.u
+
+# Add another page to app.u
+plop -- page-route --pageName Settings --routePath settings --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0 --appendTo app.u
+```
+
+**Important CLI Behavior:**
+- When creating a NEW file (not appending), you must explicitly pass `--appendTo ""`
+- Otherwise plop will prompt interactively and may error out
+- Example: `plop -- crud-module --entityName Task --fields "name:Text" --appendTo ""`
+
+**Note about json-mappers:**
+- The `json-mappers` generator includes the type definition in the output
+- If the type already exists in the file, you'll get a duplicate type error
+- Use `json-mappers` only for NEW types, or manually remove the type definition after generation
+
+**Custom Operations Format (for crud-module):**
+```json
+[{"name":"operationName","inputType":"Text","outputType":"Optional Entity"}]
+```
+- `name`: The operation name (e.g., `markPurchased`, `findByEmail`)
+- `inputType`: The input type (use `"()"` for no input)
+- `outputType`: The return type

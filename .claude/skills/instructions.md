@@ -55,13 +55,15 @@ You should typecheck the scratch file regularly as you are working to make sure 
 
 1. **Never work directly on main**
    - Create a new branch for each feature/fix
-   - Use descriptive branch names: `feature/task-crud`, `fix/route-ordering`, `add/json-mappers`
+   - Use descriptive branch names: `feature-task-crud`, `fix-route-ordering`, `add-json-mappers`
 
 2. **Branch Creation Pattern:**
    ```
-   Bash: ucm project.switch <project>/<new-branch>
+   branch <branch-name>
    ```
-   Example: `project.switch HelloWorld/feature/tasks`
+   Example: `branch feature-tasks` creates `HelloWorld/feature-tasks` if you're in the `HelloWorld` project.
+
+   **Note:** Branch names cannot contain `/` or `.` - use `-` or `_` instead.
 
 3. **When to Create Branches:**
    - At the start of ANY code generation task

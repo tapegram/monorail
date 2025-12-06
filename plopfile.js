@@ -176,12 +176,28 @@ module.exports = function (plop) {
         message: 'HTML library version:',
         default: 'tapegram_html_2_0_0',
       },
+      {
+        type: 'input',
+        name: 'customOperations',
+        message: 'Custom repository operations (JSON: [{"name":"op","inputType":"Text","outputType":"()"}], leave empty for none):',
+        default: '',
+        filter: (input) => input ? parseOperations(input) : [],
+      },
+      {
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
+      },
     ],
     actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase entityName}}-crud.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+
       const actions = [
         {
-          type: 'add',
-          path: '{{kebabCase entityName}}-crud.u',
+          type: actionType,
+          path: targetPath,
           templateFile: 'plop-templates/crud-module.u.hbs',
         },
       ];
@@ -189,7 +205,7 @@ module.exports = function (plop) {
       if (data.includeJson) {
         actions.push({
           type: 'append',
-          path: '{{kebabCase entityName}}-crud.u',
+          path: targetPath,
           templateFile: 'plop-templates/json-mappers.u.hbs',
         });
       }
@@ -229,14 +245,24 @@ module.exports = function (plop) {
         message: 'Include fake adapter for testing?',
         default: true,
       },
-    ],
-    actions: [
       {
-        type: 'add',
-        path: '{{kebabCase abilityName}}-port-adapter.u',
-        templateFile: 'plop-templates/ability-handler.u.hbs',
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
       },
     ],
+    actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase abilityName}}-port-adapter.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/ability-handler.u.hbs',
+        },
+      ];
+    },
   });
 
   // ---------------------------------------------------------------------------
@@ -258,14 +284,24 @@ module.exports = function (plop) {
         default: 'id:Text,name:Text',
         filter: (input) => parseFields(input),
       },
-    ],
-    actions: [
       {
-        type: 'add',
-        path: '{{kebabCase typeName}}-json.u',
-        templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
       },
     ],
+    actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase typeName}}-json.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
+        },
+      ];
+    },
   });
 
   // ---------------------------------------------------------------------------
@@ -304,14 +340,24 @@ module.exports = function (plop) {
         message: 'HTML library version:',
         default: 'tapegram_html_2_0_0',
       },
-    ],
-    actions: [
       {
-        type: 'add',
-        path: '{{kebabCase pageName}}-page.u',
-        templateFile: 'plop-templates/page-route.u.hbs',
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
       },
     ],
+    actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase pageName}}-page.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/page-route.u.hbs',
+        },
+      ];
+    },
   });
 
   // ---------------------------------------------------------------------------
@@ -339,14 +385,24 @@ module.exports = function (plop) {
         default: '[{"name":"getData","httpMethod":"GET","endpoint":"/data","responseType":"Json"}]',
         filter: (input) => parseOperations(input),
       },
-    ],
-    actions: [
       {
-        type: 'add',
-        path: '{{kebabCase clientName}}-api-client.u',
-        templateFile: 'plop-templates/api-client.u.hbs',
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
       },
     ],
+    actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase clientName}}-api-client.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/api-client.u.hbs',
+        },
+      ];
+    },
   });
 
   // ---------------------------------------------------------------------------
@@ -378,14 +434,24 @@ module.exports = function (plop) {
         choices: ['create', 'get', 'listAll', 'update', 'delete'],
         default: ['create', 'get', 'listAll', 'update', 'delete'],
       },
-    ],
-    actions: [
       {
-        type: 'add',
-        path: '{{kebabCase serviceName}}-tests.u',
-        templateFile: 'plop-templates/service-tests.u.hbs',
+        type: 'input',
+        name: 'appendTo',
+        message: 'Append to existing file (leave empty to create new file):',
+        default: '',
       },
     ],
+    actions: (data) => {
+      const targetPath = data.appendTo || '{{kebabCase serviceName}}-tests.u';
+      const actionType = data.appendTo ? 'append' : 'add';
+      return [
+        {
+          type: actionType,
+          path: targetPath,
+          templateFile: 'plop-templates/service-tests.u.hbs',
+        },
+      ];
+    },
   });
 
   // ---------------------------------------------------------------------------
