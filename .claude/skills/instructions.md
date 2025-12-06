@@ -39,9 +39,37 @@ And _briefly_ summarize how the chosen mode of operating works.
 1. Generate code with plop → outputs to single file (e.g., `app.u`)
 2. All edits happen in that same file
 3. Typecheck the single file with MCP
-4. Load and update from that file in UCM
+4. Tell the user when code is ready so they can run `update` in UCM
 
 As you are iterating, directly edit the file you've created. Use the MCP server to typecheck the file and run test> watch expressions. Do not pass large strings to the Unison MCP typechecking command.
+
+### Populating the Scratch File from the Codebase
+
+**Use MCP tools to view and edit existing definitions:**
+
+1. **View existing code** using MCP `view-definitions`:
+   ```
+   mcp__unison__view-definitions with names: ["web.page.css.raw", "app.routes"]
+   ```
+
+2. **Write to scratch file** using the Write or Edit tools based on what you saw
+
+3. **Typecheck** using MCP `typecheck-code` with the `filePath` parameter:
+   ```
+   mcp__unison__typecheck-code with code: {"filePath": "/path/to/scratch.u"}
+   ```
+
+**When to use:**
+- Before editing an existing definition
+- When the scratch file is empty or corrupted
+- To pull specific definitions you need to modify
+
+**IMPORTANT:**
+- ONLY interact with UCM via MCP server tools (never Bash ucm commands)
+- Use MCP `view-definitions` to see existing code
+- Use Write/Edit tools to update the scratch file
+- Use MCP `typecheck-code` with `filePath` to verify changes
+- NEVER run `update` yourself - always tell the user to run it when code typechecks
 
 You can show me excerpts of the scratch file as needed when asking me for help or for review.
 
@@ -70,16 +98,18 @@ You should typecheck the scratch file regularly as you are working to make sure 
    - Before making changes to existing code
    - When experimenting with new features
 
-### Update Frequently
+### Update Frequently (USER RESPONSIBILITY)
 
-**RULE:** Run `ucm update` after EVERY successful typecheck of a meaningful change.
+**RULE:** The USER runs `update` in UCM after Claude confirms code typechecks.
+
+**IMPORTANT:** Claude NEVER runs `update` - this is always the user's responsibility.
 
 **Workflow:**
 ```
-1. Write/Edit code in scratch file
-2. Typecheck using MCP (must pass)
-3. Run: ucm update
-4. Continue to next change
+1. Claude: Write/Edit code in scratch file
+2. Claude: Typecheck using MCP (must pass)
+3. Claude: Tell user "Code typechecks. Run `update` in UCM to apply."
+4. User: Runs `update` in UCM
 5. Repeat
 ```
 
@@ -89,11 +119,11 @@ You should typecheck the scratch file regularly as you are working to make sure 
 - Makes it easier to rollback specific changes
 - Keeps codebase in sync with your work
 
-**When to Update:**
+**When to tell user to update:**
 - After adding a new definition and it typechecks
 - After editing a definition and it typechecks
 - After fixing a type error
-- Before taking a break or asking user for review
+- Before asking user for review
 - Before switching tasks
 
 ### Testing Changes with deploy.dev
@@ -131,39 +161,41 @@ Bash: ucm run deploy.deployDev
 4. Deploy to stage for final testing: `run deploy.deployStage`
 5. Once approved, deploy to prod: `run deploy.deployProd`
 
-### File Management with UCM
+### File Management with MCP
 
 **If a file gets accidentally emptied or corrupted:**
 
-```
-Bash: ucm edit <namespace>
-```
+1. Use MCP `view-definitions` to see the current code in the codebase
+2. Use the Write tool to recreate the scratch file with that code
+3. Use MCP `typecheck-code` with `filePath` to verify
 
-This restores the definitions from the codebase to the file.
+**Managing the scratch file:**
+- Use MCP `view-definitions` to see existing code before editing
+- Use Write tool to create/recreate the scratch file
+- Use Edit tool to make incremental changes
+- Use MCP `typecheck-code` with `filePath` to verify changes
+- Tell user to run `update` when code is ready
 
-**Managing the scratch file with UCM:**
-- You can run `edit` yourself to pull definitions from codebase
-- You can use `update` to save your changes
-- Don't be afraid to use UCM commands directly
+**IMPORTANT:** Only interact with UCM via MCP tools. Never run UCM commands via Bash.
 
 ### Summary of Critical Workflow
 
 **For EVERY code generation task:**
 
 1. ✅ Create a branch (or verify you're on one)
-2. ✅ Write code in scratch file
-3. ✅ Typecheck using MCP
-4. ✅ Run `ucm update` after each successful typecheck
-5. ✅ Deploy to dev to test (`run deploy.deployDev`)
-6. ✅ Iterate until working
-7. ✅ Ask user to review
+2. ✅ Use MCP `view-definitions` to see existing code if editing
+3. ✅ Use Write/Edit tools to modify scratch file
+4. ✅ Typecheck using MCP `typecheck-code` with `filePath`
+5. ✅ Tell user to run `update` after each successful typecheck
+6. ✅ User deploys to dev to test (`run deploy.deployDev`)
+7. ✅ Iterate until working
 8. ✅ User merges to main when ready
 
 **Never:**
 - ❌ Work directly on main
-- ❌ Skip updates between changes
+- ❌ Run `update` yourself (user's responsibility)
+- ❌ Run UCM commands via Bash (use MCP tools only)
 - ❌ Deploy to prod without testing in dev/stage first
-- ❌ Forget to update before asking for review
 
 ## DISCOVERY mode instructions
 
