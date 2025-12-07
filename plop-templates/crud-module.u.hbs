@@ -4,9 +4,13 @@
 -- REQUIRED LIBRARIES:
 --   @unison/cloud       (Database, OrderedTable, Remote)
 --   @unison/routes      (Route ability, hx_* attributes)
---   @unison/json        (JSON encoding/decoding - if includeJson=true)
+--   @unison/json        (JSON encoding/decoding - REQUIRED for storage)
 --   @tapegram/html      (Html type, HTML elements)
 --   @tapegram/htmx      (hx_post, hx_delete, hx_target, hx_swap)
+--
+-- NOTE: This module stores entities as JSON for schema evolution.
+-- JSON mappers ({{pascalCase entityName}}.encode/decode) are REQUIRED.
+-- Use --includeJson true or generate separately with: plop -- json-mappers
 
 -- =============================================================================
 -- DOMAIN TYPE
@@ -36,25 +40,35 @@ ability {{pascalCase entityName}}Repository where
 -- REPOSITORY ADAPTER (HANDLER)
 -- =============================================================================
 
+-- NOTE: Stores entities as JSON text for schema evolution compatibility.
+-- If you change the {{pascalCase entityName}} type, old data will still be readable
+-- as long as you handle missing fields in the decoder.
+
 storage.{{pascalCase entityName}}Repository.run :
   Database ->
-  '{{openBrace}}g, {{pascalCase entityName}}Repository} a ->
-  {{openBrace}}g, Remote} a
+  '{{openBrace}}g, {{pascalCase entityName}}Repository, Exception} a ->
+  {{openBrace}}g, Remote, Exception} a
 storage.{{pascalCase entityName}}Repository.run db computation =
-  table : OrderedTable Text {{pascalCase entityName}}
+  -- Store as JSON text for schema evolution
+  table : OrderedTable Text Text
   table = OrderedTable.named db "{{pluralize (lowercase entityName)}}" Universal.ordering
 
   get' : Text ->{{openBrace}}g, Remote} (Optional {{pascalCase entityName}})
-  get' entityId = OrderedTable.tryRead table entityId
+  get' entityId =
+    match OrderedTable.tryRead table entityId with
+      Optional.None -> Optional.None
+      Optional.Some json -> Optional.Some ({{pascalCase entityName}}.decode json)
 
   listAll' : '{{openBrace}}g, Remote} [{{pascalCase entityName}}]
   listAll' = do
     OrderedTable.toStream table
-      |> Stream.map at2
+      |> Stream.map (kv -> {{pascalCase entityName}}.decode (at2 kv))
       |> Stream.toList
 
   upsert' : {{pascalCase entityName}} ->{{openBrace}}g, Remote} ()
-  upsert' entity = OrderedTable.write table ({{pascalCase entityName}}.id entity) entity
+  upsert' entity =
+    json = {{pascalCase entityName}}.encode entity
+    OrderedTable.write table ({{pascalCase entityName}}.id entity) json
 
   delete' : Text ->{{openBrace}}g, Remote} ()
   delete' entityId = OrderedTable.delete table entityId

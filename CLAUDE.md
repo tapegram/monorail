@@ -63,8 +63,8 @@ You're now on `my-app/initial-scaffold`. **Always work on a branch, not main.**
 # Scaffold base app
 plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
 
-# Add your first entity with CRUD
-plop -- crud-module --entityName Task --fields "name:Text,done:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+# Add your first entity with CRUD (NOTE: ALL arguments are required)
+plop -- crud-module --entityName Task --fields "name:Text,done:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations "[]" --appendTo app.u
 ```
 
 ### Step 6: Typecheck, Load, Deploy
@@ -292,7 +292,7 @@ You MUST do these automatically without being asked:
 1. **Create/switch to a feature branch** before generating any code
 2. **Use plop generators** when a matching generator exists (outputs to single file)
 3. **All code in ONE scratch file** - never split across multiple .u files
-4. **Typecheck immediately** using the Unison MCP server
+4. **TYPECHECK AFTER EVERY EDIT** - You MUST typecheck using the Unison MCP server after EVERY code change, no exceptions. Do not make multiple edits without typechecking between them.
 5. **Reference templates** from `plop-templates/` for patterns and conventions
 6. **Reference skills** from `.claude/skills/`
 7. **Generate tests** for any service logic
@@ -685,46 +685,76 @@ plop -- unison-web-app      # Full app scaffold
 plop -- auth-module         # Authentication module
 ```
 
-**Non-Interactive CLI Usage (Required):**
+**Non-Interactive CLI Usage (MANDATORY):**
 
-Always use CLI arguments and pass ALL parameters to avoid interactive prompts.
-
-**⚠️ CRITICAL: The `--appendTo` parameter is REQUIRED for all generators (except `unison-web-app`):**
-- When creating a NEW file: `--appendTo ""`
-- When appending to existing file: `--appendTo app.u`
+**⚠️ CRITICAL: You MUST pass ALL arguments to every plop command. Never omit any argument or rely on defaults. If an argument is omitted, plop will prompt interactively and fail in non-interactive mode.**
 
 ```bash
-# Scaffold a new web app (always creates app.u)
+# =============================================================================
+# unison-web-app - Scaffold a new app
+# =============================================================================
+# Arguments: --appName, --htmlLib
 plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
 
-# Generate CRUD module - NEW FILE
-plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo ""
+# =============================================================================
+# crud-module - Full CRUD (domain, repository, service, routes, pages)
+# =============================================================================
+# Arguments: --entityName, --fields, --includeJson, --htmlLib, --customOperations, --appendTo
+# NOTE: --customOperations MUST be "[]" if no custom operations needed
 
-# Generate CRUD module - APPEND to app.u
-plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+# NEW FILE:
+plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations "[]" --appendTo ""
 
-# Generate CRUD module with custom repository operations
+# APPEND to existing file:
+plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations "[]" --appendTo app.u
+
+# With custom repository operations:
 plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations '[{"name":"markPurchased","inputType":"Text","outputType":"()"}]' --appendTo app.u
 
-# Generate JSON mappers
+# =============================================================================
+# json-mappers - JSON encoder/decoder for a type
+# =============================================================================
+# Arguments: --typeName, --fields, --appendTo
+
 plop -- json-mappers --typeName User --fields "id:Text,email:Text,name:Text" --appendTo app.u
 
-# Generate page and route
+# =============================================================================
+# page-route - Page, controller, and route
+# =============================================================================
+# Arguments: --pageName, --routePath, --httpMethod, --hasParams, --htmlLib, --appendTo
+
 plop -- page-route --pageName About --routePath about --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0 --appendTo app.u
 
-# Generate ability and handler (operations as JSON)
+# =============================================================================
+# ability-handler - Port (ability) + adapter (handler)
+# =============================================================================
+# Arguments: --abilityName, --operations, --adapterType, --includeFake, --appendTo
+
 plop -- ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]' --adapterType "HTTP API" --includeFake true --appendTo app.u
 
-# Generate API client
+# =============================================================================
+# api-client - HTTP API client with ability
+# =============================================================================
+# Arguments: --clientName, --baseUrl, --operations, --appendTo
+
 plop -- api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/users","responseType":"Json"}]' --appendTo app.u
 
-# Generate service tests
+# =============================================================================
+# service-tests - Tests for a service
+# =============================================================================
+# Arguments: --serviceName, --entityName, --repositoryName, --operations, --appendTo
+
 plop -- service-tests --serviceName WorkoutService --entityName Workout --repositoryName WorkoutRepository --operations create,get,listAll,update,delete --appendTo app.u
 
-# Generate authentication module - NEW FILE
+# =============================================================================
+# auth-module - Authentication (login, signup, sessions)
+# =============================================================================
+# Arguments: --htmlLib, --cookieName, --sessionDays, --minPasswordLength, --saltPrefix, --appendTo
+
+# NEW FILE:
 plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName session --sessionDays 30 --minPasswordLength 8 --saltPrefix myapp --appendTo ""
 
-# Generate auth module - APPEND to app.u
+# APPEND to existing file:
 plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName "myapp-session" --sessionDays 7 --minPasswordLength 10 --saltPrefix myapp --appendTo app.u
 ```
 

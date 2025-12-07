@@ -755,6 +755,68 @@ createItem = do
 
 **Reference:** See @.claude/skills/authentication.md for complete patterns.
 
+### Pitfall 11: HTMX Target Not Found on Empty Lists
+
+**Problem:** When a list is empty, htmx can't find the target element for appending new items. The `hx-target="#item-list"` fails because the `<ul id="item-list">` doesn't exist or only contains a placeholder `<li>`.
+
+**Wrong pattern:**
+```unison
+-- Empty message inside the list - htmx appends AFTER it
+ul [id "item-list"]
+  (if List.isEmpty items then
+    [li [] [text "No items yet"]]  -- This stays when items are added!
+  else
+    List.map renderItem items)
+```
+
+**Correct pattern:**
+```unison
+-- Empty message OUTSIDE the list, list always exists
+emptyMessage =
+  if List.isEmpty items then
+    p [style "color: #888;"] [text "No items yet"]
+  else empty
+
+section []
+  [ emptyMessage                              -- Separate from list
+  , ul [id "item-list"] (List.map renderItem items)  -- Always render ul
+  ]
+```
+
+**Why this works:**
+1. The `<ul id="item-list">` always exists, even when empty
+2. `hx-swap="beforeend"` can always find the target
+3. Empty message is separate and doesn't interfere with item rendering
+4. When first item is added, it appears in the (previously empty) list
+
+**Bonus:** Add `style "list-style: none; padding: 0;"` to the `ul` for cleaner look.
+
+### Pitfall 12: No Redirect Helper in Routes
+
+**Problem:** There's no simple `redirect` function. Developers try things like `redirect.found url` which don't exist.
+
+**Solution:** Use the `web.redirect` helper (added to web-utilities template):
+
+```unison
+-- In web utilities (already included in template):
+web.redirect : Text ->{Route} ()
+web.redirect url = do
+  response.setStatus (HttpResponse.Status.Status 303 "See Other")
+  response.headers.add "Location" url
+
+-- Usage:
+loginPost = do
+  noCapture POST (s "login")
+  -- ... validate login ...
+  web.redirect (baseUrl() Path./ "" |> Path.toText)  -- Redirect to home
+```
+
+Or manually if not using the helper:
+```unison
+response.setStatus (HttpResponse.Status.Status 303 "See Other")
+response.headers.add "Location" "/some/path"
+```
+
 ---
 
 ## Summary Checklist
