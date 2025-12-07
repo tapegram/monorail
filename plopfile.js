@@ -212,8 +212,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -283,8 +282,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -332,8 +330,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -398,8 +395,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -453,8 +449,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -512,8 +507,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
@@ -578,8 +572,7 @@ module.exports = function (plop) {
       {
         type: 'input',
         name: 'appendTo',
-        message: 'Append to existing file (leave empty to create new file):',
-        default: '',
+        message: 'File to write to (empty string for new file, or existing filename to append):',
       },
     ],
     actions: (data) => {
