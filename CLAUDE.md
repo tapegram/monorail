@@ -600,10 +600,19 @@ package.json                 -- npm dependencies (plop, pluralize)
 
 Claude should use these official sources:
 
-- **htmx documentation** — https://htmx.org/docs/
-- **PicoCSS documentation** — https://picocss.com/docs/
+## htmx
+- **Documentation:** https://htmx.org/docs/
+- **Attribute Reference:** https://htmx.org/reference/
+- **Examples:** https://htmx.org/examples/
+- **Extensions:** https://htmx.org/extensions/
+- **Community Resources:** https://github.com/rajasegar/awesome-htmx
 
-When generating HTML or htmx attributes, Claude should reference these docs instead of guessing.
+See @.claude/skills/htmx-reference.md for quick reference and common patterns.
+
+## PicoCSS
+- **Documentation:** https://picocss.com/docs/
+
+When generating HTML or htmx attributes, Claude should reference these docs instead of guessing. Use `WebFetch` to look up specific htmx attributes or examples when needed.
 
 ---
 
