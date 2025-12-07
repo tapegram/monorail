@@ -1,6 +1,32 @@
 const pluralize = require('pluralize');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = function (plop) {
+  // =============================================================================
+  // CUSTOM ACTION: SAFE FILE APPEND
+  // =============================================================================
+  // This custom action safely appends content to files without regex issues.
+  // Plop's built-in 'append' action uses regex replacement which breaks when
+  // template content contains regex special characters like '/' in comments.
+
+  plop.setActionType('appendToFile', function (answers, config, plop) {
+    const targetPath = plop.renderString(config.path, answers);
+    const absolutePath = path.resolve(process.cwd(), targetPath);
+
+    // Render the template
+    const templatePath = path.resolve(process.cwd(), config.templateFile);
+    const templateContent = fs.readFileSync(templatePath, 'utf8');
+    const renderedContent = plop.renderString(templateContent, answers);
+
+    // Append to file with newline separator
+    const existingContent = fs.readFileSync(absolutePath, 'utf8');
+    const newContent = existingContent + '\n' + renderedContent;
+    fs.writeFileSync(absolutePath, newContent, 'utf8');
+
+    return `Appended to ${targetPath}`;
+  });
+
   // =============================================================================
   // HANDLEBARS HELPERS
   // =============================================================================
@@ -196,11 +222,10 @@ module.exports = function (plop) {
       const actions = [];
 
       if (data.appendTo) {
-        // Append to existing file
+        // Append to existing file using custom action (avoids regex issues)
         actions.push({
-          type: 'append',
+          type: 'appendToFile',
           path: targetPath,
-          pattern: /$/,  // Append at end of file
           templateFile: 'plop-templates/crud-module.u.hbs',
         });
       } else {
@@ -214,9 +239,8 @@ module.exports = function (plop) {
 
       if (data.includeJson) {
         actions.push({
-          type: 'append',
+          type: 'appendToFile',
           path: targetPath,
-          pattern: /$/,  // Append at end of file
           templateFile: 'plop-templates/json-mappers.u.hbs',
         });
       }
@@ -269,9 +293,8 @@ module.exports = function (plop) {
       if (data.appendTo) {
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/ability-handler.u.hbs',
           },
         ];
@@ -319,9 +342,8 @@ module.exports = function (plop) {
       if (data.appendTo) {
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/json-mappers-standalone.u.hbs',
           },
         ];
@@ -386,9 +408,8 @@ module.exports = function (plop) {
       if (data.appendTo) {
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/page-route.u.hbs',
           },
         ];
@@ -442,9 +463,8 @@ module.exports = function (plop) {
       if (data.appendTo) {
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/api-client.u.hbs',
           },
         ];
@@ -502,9 +522,8 @@ module.exports = function (plop) {
       if (data.appendTo) {
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/service-tests.u.hbs',
           },
         ];
@@ -567,12 +586,11 @@ module.exports = function (plop) {
       const targetPath = data.appendTo || 'auth.u';
 
       if (data.appendTo) {
-        // Append to existing file - use pattern to avoid regex issues with content
+        // Append to existing file using custom action (avoids regex issues)
         return [
           {
-            type: 'append',
+            type: 'appendToFile',
             path: targetPath,
-            pattern: /$/,  // Append at end of file
             templateFile: 'plop-templates/auth-module.u.hbs',
           },
         ];

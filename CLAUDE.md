@@ -64,7 +64,7 @@ You're now on `my-app/initial-scaffold`. **Always work on a branch, not main.**
 plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
 
 # Add your first entity with CRUD
-plop -- crud-module --entityName Task --fields "name:Text,done:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+echo "" | plop -- crud-module --entityName Task --fields "name:Text,done:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
 ```
 
 ### Step 6: Typecheck, Load, Deploy
@@ -687,38 +687,40 @@ plop -- auth-module         # Authentication module
 
 **Non-Interactive CLI Usage (Preferred):**
 
-Always use CLI arguments to avoid interactive prompts. Syntax: `plop -- <generator> --arg value`
+Always use CLI arguments to avoid interactive prompts. Syntax: `echo "" | plop -- <generator> --arg value`
+
+**IMPORTANT:** Always prefix plop commands with `echo "" |` to handle any remaining interactive prompts. This ensures plop runs fully non-interactively and won't hang waiting for stdin.
 
 ```bash
 # Scaffold a new web app
-plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
+echo "" | plop -- unison-web-app --appName MyApp --htmlLib tapegram_html_2_1_0
 
 # Generate CRUD module (fields as comma-separated name:Type pairs)
-plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0
+echo "" | plop -- crud-module --entityName Workout --fields "name:Text,reps:Nat" --includeJson true --htmlLib tapegram_html_2_1_0
 
 # Generate CRUD module with custom repository operations
-plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations '[{"name":"markPurchased","inputType":"Text","outputType":"()"}]'
+echo "" | plop -- crud-module --entityName Gift --fields "name:Text,url:Text,purchased:Boolean" --includeJson true --htmlLib tapegram_html_2_1_0 --customOperations '[{"name":"markPurchased","inputType":"Text","outputType":"()"}]'
 
 # Generate JSON mappers
-plop -- json-mappers --typeName User --fields "id:Text,email:Text,name:Text"
+echo "" | plop -- json-mappers --typeName User --fields "id:Text,email:Text,name:Text"
 
 # Generate page and route
-plop -- page-route --pageName About --routePath about --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0
+echo "" | plop -- page-route --pageName About --routePath about --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0
 
 # Generate ability and handler (operations as JSON)
-plop -- ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]' --adapterType "HTTP API" --includeFake true
+echo "" | plop -- ability-handler --abilityName EmailClient --operations '[{"name":"send","inputType":"Email","outputType":"()"}]' --adapterType "HTTP API" --includeFake true
 
 # Generate API client
-plop -- api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/users","responseType":"Json"}]'
+echo "" | plop -- api-client --clientName GitHub --baseUrl api.github.com --operations '[{"name":"getUser","httpMethod":"GET","endpoint":"/users","responseType":"Json"}]'
 
 # Generate service tests
-plop -- service-tests --serviceName WorkoutService --entityName Workout --repositoryName WorkoutRepository --operations create,get,listAll,update,delete
+echo "" | plop -- service-tests --serviceName WorkoutService --entityName Workout --repositoryName WorkoutRepository --operations create,get,listAll,update,delete
 
 # Generate authentication module
-plop -- auth-module --htmlLib tapegram_html_2_1_0
+echo "" | plop -- auth-module --htmlLib tapegram_html_2_1_0
 
 # Generate auth with custom settings
-plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName "myapp-session" --sessionDays 7 --minPasswordLength 10 --appendTo app.u
+echo "" | plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName "myapp-session" --sessionDays 7 --minPasswordLength 10 --appendTo app.u
 ```
 
 **Field Format Options:**
@@ -730,10 +732,10 @@ plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName "myapp-session" -
 All generators support `--appendTo` to add generated code to an existing file:
 ```bash
 # Append JSON mappers to existing app.u file
-plop -- json-mappers --typeName Comment --fields "id:Text,body:Text" --appendTo app.u
+echo "" | plop -- json-mappers --typeName Comment --fields "id:Text,body:Text" --appendTo app.u
 
 # Add another page to app.u
-plop -- page-route --pageName Settings --routePath settings --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0 --appendTo app.u
+echo "" | plop -- page-route --pageName Settings --routePath settings --httpMethod GET --hasParams false --htmlLib tapegram_html_2_1_0 --appendTo app.u
 ```
 
 **⚠️ CRITICAL CLI Behavior:**
@@ -745,13 +747,13 @@ plop -- page-route --pageName Settings --routePath settings --httpMethod GET --h
 **Examples with all required args:**
 ```bash
 # Create NEW auth.u file (note: --appendTo "")
-plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName session --sessionDays 30 --minPasswordLength 8 --saltPrefix myapp --appendTo ""
+echo "" | plop -- auth-module --htmlLib tapegram_html_2_1_0 --cookieName session --sessionDays 30 --minPasswordLength 8 --saltPrefix myapp --appendTo ""
 
 # Create NEW crud file
-plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo ""
+echo "" | plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo ""
 
 # Append to existing file
-plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
+echo "" | plop -- crud-module --entityName Task --fields "name:Text" --includeJson true --htmlLib tapegram_html_2_1_0 --appendTo app.u
 ```
 
 **Note about json-mappers:**
