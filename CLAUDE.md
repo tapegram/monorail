@@ -612,6 +612,14 @@ See @.claude/skills/htmx-reference.md for quick reference and common patterns.
 ## PicoCSS
 - **Documentation:** https://picocss.com/docs/
 
+## Theming
+
+Color palettes for PicoCSS themes are stored in `.claude/data/color-palettes.jsonl`.
+
+**Available palettes:** cool_blue, salmon_charcoal, teal_stone, purple_soft_gray, lime_graphite, sunset_gold_navy, mint_ink, rose_slate, cyber_grape, earthy_rust_olive, christmas
+
+See @.claude/skills/color-palettes-theming.md for how to generate and apply themes.
+
 When generating HTML or htmx attributes, Claude should reference these docs instead of guessing. Use `WebFetch` to look up specific htmx attributes or examples when needed.
 
 ---

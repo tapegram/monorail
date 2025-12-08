@@ -148,73 +148,38 @@ web.cookie.expire : Cookie -> Cookie
 web.cookie.expire c = Cookie.maxAge.set (Some (time.Duration.seconds +0)) c
 
 -- =============================================================================
--- THEME PRESETS
+-- THEME GENERATION
 -- =============================================================================
 
 \{{
-Christmas theme - forest green background with red accents.
-}}
-web.theme.christmas : Text
-web.theme.christmas = """
-:root {
-  --pico-background-color: #0d2818;
-  --pico-color: #e8f5e9;
-  --pico-primary: #4caf50;
-  --pico-primary-hover: #66bb6a;
-  --pico-secondary: #c62828;
-  --pico-secondary-hover: #e53935;
-  --pico-muted-color: #a5d6a7;
-  --pico-muted-border-color: #2e7d32;
-  --pico-card-background-color: #1b5e20;
-  --pico-card-border-color: #2e7d32;
-  --pico-form-element-background-color: #1b5e20;
-  --pico-form-element-border-color: #4caf50;
-  --pico-form-element-focus-color: #81c784;
-}
-body { background: linear-gradient(180deg, #0d2818 0%, #1a472a 100%); min-height: 100vh; }
-h1, h2, h3 { color: #a5d6a7; }
-a { color: #81c784; }
-a:hover { color: #a5d6a7; }
-button { background-color: #c62828; border-color: #c62828; }
-button:hover { background-color: #e53935; border-color: #e53935; }
-button[type="submit"] { background-color: #4caf50; border-color: #4caf50; }
-button[type="submit"]:hover { background-color: #66bb6a; border-color: #66bb6a; }
-input, textarea, select { background-color: #1b5e20; border-color: #4caf50; color: #e8f5e9; }
-input::placeholder { color: #81c784; }
-"""
+Themes are generated from color palettes in .claude/data/color-palettes.jsonl.
+See .claude/skills/color-palettes-theming.md for the full list of available palettes.
 
-\{{
-Dark theme - neutral dark background.
-}}
-web.theme.dark : Text
-web.theme.dark = """
-:root {
-  --pico-background-color: #1a1a2e;
-  --pico-color: #eaeaea;
-  --pico-primary: #0f3460;
-  --pico-primary-hover: #16213e;
-  --pico-muted-color: #888;
-  --pico-card-background-color: #16213e;
-}
-"""
+To apply a theme, ask Claude to generate one from the palette data.
+Example: "Apply the teal_stone theme" or "Make it dark mode with the cyber_grape palette"
 
-\{{
-Ocean theme - blue tones.
+Available palettes: cool_blue, salmon_charcoal, teal_stone, purple_soft_gray,
+lime_graphite, sunset_gold_navy, mint_ink, rose_slate, cyber_grape, earthy_rust_olive
+
+Example theme structure:
 }}
-web.theme.ocean : Text
-web.theme.ocean = """
+
+web.theme.example : Text
+web.theme.example = """
 :root {
-  --pico-background-color: #0a1628;
-  --pico-color: #e0f7fa;
-  --pico-primary: #0288d1;
-  --pico-primary-hover: #03a9f4;
-  --pico-muted-color: #80deea;
-  --pico-card-background-color: #01579b;
-  --pico-form-element-background-color: #01579b;
-  --pico-form-element-border-color: #0288d1;
+  --pico-background-color: #FFFFFF;
+  --pico-color: #1A1A1A;
+  --pico-primary: #3A7AFE;
+  --pico-primary-hover: #5A94FF;
+  --pico-primary-inverse: #FFFFFF;
+  --pico-secondary: #F2F4F7;
+  --pico-secondary-hover: #E5E9EE;
+  --pico-muted-color: #F2F4F7;
+  --pico-muted-border-color: #D0D5DD;
+  --pico-card-background-color: #FFFFFF;
+  --pico-card-border-color: #D0D5DD;
+  --pico-form-element-background-color: #FFFFFF;
+  --pico-form-element-border-color: #D0D5DD;
+  --pico-form-element-focus-color: #3A7AFE;
 }
-body { background: linear-gradient(180deg, #0a1628 0%, #1a237e 100%); min-height: 100vh; }
-h1, h2, h3 { color: #4fc3f7; }
-a { color: #4fc3f7; }
-button[type="submit"] { background-color: #0288d1; border-color: #0288d1; }
 """
