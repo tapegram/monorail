@@ -43,6 +43,21 @@ And _briefly_ summarize how the chosen mode of operating works.
 
 As you are iterating, directly edit the file you've created. Use the MCP server to typecheck the file and run test> watch expressions. Do not pass large strings to the Unison MCP typechecking command.
 
+### CRITICAL: Typecheck After EVERY Change
+
+**You MUST typecheck after EVERY single edit to the scratch file.** This includes:
+- After plop generates code
+- After each Edit tool use
+- After each Write tool use
+- Before showing code to the user
+
+**Why?**
+- Unison errors compound quickly - catching them early saves debugging time
+- Users expect working code - never show untypechecked code
+- Small errors are easier to fix than cascading type errors
+
+**The Rule:** If you modified a `.u` file, typecheck it immediately. No exceptions.
+
 ### Populating the Scratch File from the Codebase
 
 **Use MCP tools to view and edit existing definitions:**

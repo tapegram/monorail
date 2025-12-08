@@ -63,12 +63,15 @@ Map palette colors to PicoCSS variables:
 
 | Palette Color | PicoCSS Variable(s) |
 |---------------|---------------------|
-| `primary` | `--pico-primary`, `--pico-primary-hover` (slightly lighter) |
+| `primary` | `--pico-primary` (links), `--pico-primary-background` (buttons), `--pico-primary-border` |
+| `primary_hover` | `--pico-primary-hover`, `--pico-primary-hover-background`, `--pico-primary-hover-border` |
 | `primary_contrast` | `--pico-primary-inverse` |
-| `surface` | `--pico-background-color`, `--pico-card-background-color`, `--pico-form-element-background-color` |
-| `text` | `--pico-color` |
-| `muted` | `--pico-muted-color`, `--pico-secondary` |
+| `surface` | `--pico-background-color`, `--pico-card-background-color`, `--pico-form-element-background-color`, `--pico-dropdown-background-color` |
+| `text` | `--pico-color`, `--pico-h1-color`, `--pico-h2-color`, `--pico-h3-color` |
+| `muted` | `--pico-muted-color`, `--pico-secondary`, `--pico-secondary-background` |
 | `border` | `--pico-muted-border-color`, `--pico-form-element-border-color`, `--pico-card-border-color` |
+
+**IMPORTANT:** PicoCSS uses `@media (prefers-color-scheme: dark)` to auto-switch themes. To force a theme regardless of system preference, use `[data-theme=light]` or `[data-theme=dark]` selectors AND add `data-theme="light"` to the `<html>` element.
 
 ### Theme Template
 
@@ -77,30 +80,70 @@ Generate a Unison function like this:
 ```unison
 web.theme.{id} : Text
 web.theme.{id} = """
-:root {
+/* Force light mode regardless of system preference */
+:root,
+[data-theme=light] {
+  color-scheme: light;
   --pico-background-color: {surface};
   --pico-color: {text};
+
+  /* Primary colors (links and buttons) */
   --pico-primary: {primary};
-  --pico-primary-hover: {primary_lighter};
+  --pico-primary-background: {primary};
+  --pico-primary-border: {primary};
+  --pico-primary-hover: {primary_hover};
+  --pico-primary-hover-background: {primary_hover};
+  --pico-primary-hover-border: {primary_hover};
+  --pico-primary-focus: rgba({primary_rgb}, 0.5);
   --pico-primary-inverse: {primary_contrast};
-  --pico-secondary: {muted};
-  --pico-secondary-hover: {muted_lighter};
-  --pico-muted-color: {muted};
+
+  /* Secondary colors */
+  --pico-secondary: {muted_dark};
+  --pico-secondary-background: {muted_dark};
+  --pico-secondary-border: {muted_dark};
+  --pico-secondary-hover: {muted_darker};
+  --pico-secondary-hover-background: {muted_darker};
+
+  /* Muted/border colors */
+  --pico-muted-color: {muted_text};
   --pico-muted-border-color: {border};
+
+  /* Card colors */
   --pico-card-background-color: {surface};
   --pico-card-border-color: {border};
+
+  /* Form element colors */
   --pico-form-element-background-color: {surface};
   --pico-form-element-border-color: {border};
+  --pico-form-element-color: {text};
   --pico-form-element-focus-color: {primary};
+  --pico-form-element-active-border-color: {primary};
+
+  /* Heading colors */
+  --pico-h1-color: {text};
+  --pico-h2-color: {text};
+  --pico-h3-color: {text};
+  --pico-h4-color: {text_muted};
+  --pico-h5-color: {text_muted};
+  --pico-h6-color: {muted_text};
 }
 """
 ```
 
 ### Light vs Dark Mode
 
-- Use `light` colors for light mode themes (default)
-- Use `dark` colors for dark mode themes
-- Can generate both: `web.theme.{id}.light` and `web.theme.{id}.dark`
+PicoCSS automatically switches between light/dark based on `prefers-color-scheme`. To control this:
+
+1. **Force light mode:** Add `data-theme="light"` to `<html>` element
+2. **Force dark mode:** Add `data-theme="dark"` to `<html>` element
+3. **Auto (system preference):** Don't add `data-theme` attribute
+
+When generating themes, ALWAYS add the `data-theme` attribute to the HTML element:
+
+```unison
+html [lang "en", Attribute "data-theme" "light"]
+  [ ... ]
+```
 
 ### Applying a Theme
 
@@ -136,23 +179,55 @@ When user asks for a theme:
 ```unison
 web.theme.coolBlue : Text
 web.theme.coolBlue = """
-:root {
+:root,
+[data-theme=light] {
+  color-scheme: light;
   --pico-background-color: #FFFFFF;
   --pico-color: #1A1A1A;
+
+  /* Primary (ocean blue) */
   --pico-primary: #3A7AFE;
+  --pico-primary-background: #3A7AFE;
+  --pico-primary-border: #3A7AFE;
   --pico-primary-hover: #5A94FF;
+  --pico-primary-hover-background: #5A94FF;
+  --pico-primary-hover-border: #5A94FF;
+  --pico-primary-focus: rgba(58, 122, 254, 0.5);
   --pico-primary-inverse: #FFFFFF;
-  --pico-secondary: #F2F4F7;
-  --pico-secondary-hover: #E5E9EE;
-  --pico-muted-color: #F2F4F7;
+
+  /* Secondary */
+  --pico-secondary: #6B7280;
+  --pico-secondary-background: #6B7280;
+  --pico-secondary-border: #6B7280;
+  --pico-secondary-hover: #4B5563;
+  --pico-secondary-hover-background: #4B5563;
+
+  /* Muted */
+  --pico-muted-color: #6B7280;
   --pico-muted-border-color: #D0D5DD;
+
+  /* Cards */
   --pico-card-background-color: #FFFFFF;
   --pico-card-border-color: #D0D5DD;
+
+  /* Forms */
   --pico-form-element-background-color: #FFFFFF;
   --pico-form-element-border-color: #D0D5DD;
+  --pico-form-element-color: #1A1A1A;
   --pico-form-element-focus-color: #3A7AFE;
+  --pico-form-element-active-border-color: #3A7AFE;
+
+  /* Headings */
+  --pico-h1-color: #1A1A1A;
+  --pico-h2-color: #1A1A1A;
+  --pico-h3-color: #1A1A1A;
 }
 """
+```
+
+**Don't forget:** Add `data-theme="light"` to your `<html>` element:
+```unison
+html [lang "en", Attribute "data-theme" "light"]
 ```
 
 ## Adding Custom Palettes

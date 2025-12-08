@@ -8,34 +8,34 @@
 -- JSON MAPPERS
 -- =============================================================================
 
-{{pascalCase entityName}}.encoder : {{pascalCase entityName}} -> Json
-{{pascalCase entityName}}.encoder entity =
+app.domain.{{pascalCase entityName}}.encoder : app.domain.{{pascalCase entityName}} -> Json
+app.domain.{{pascalCase entityName}}.encoder entity =
   object.empty
-    |> object.addText "id" ({{pascalCase entityName}}.id entity)
+    |> object.addText "id" (app.domain.{{pascalCase entityName}}.id entity)
 {{#each fields}}
 {{#if (eq type "Text")}}
-    |> object.addText "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
+    |> object.addText "{{name}}" (app.domain.{{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Nat")}}
-    |> object.addNat "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
+    |> object.addNat "{{name}}" (app.domain.{{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Int")}}
-    |> object.addInt "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
+    |> object.addInt "{{name}}" (app.domain.{{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Float")}}
-    |> object.addFloat "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
+    |> object.addFloat "{{name}}" (app.domain.{{pascalCase ../entityName}}.{{name}} entity)
 {{else if (eq type "Boolean")}}
-    |> object.addBoolean "{{name}}" ({{pascalCase ../entityName}}.{{name}} entity)
+    |> object.addBoolean "{{name}}" (app.domain.{{pascalCase ../entityName}}.{{name}} entity)
 {{else if (startsWith type "Optional ")}}
-    |> (match {{pascalCase ../entityName}}.{{name}} entity with
+    |> (match app.domain.{{pascalCase ../entityName}}.{{name}} entity with
           Some v -> object.add{{substring type 9}} "{{name}}" v
           None -> identity)
 {{else if (startsWith type "[")}}
-    |> object.addArray "{{name}}" (List.map Json.String ({{pascalCase ../entityName}}.{{name}} entity))
+    |> object.addArray "{{name}}" (List.map Json.String (app.domain.{{pascalCase ../entityName}}.{{name}} entity))
 {{else}}
-    |> object.addJson "{{name}}" ({{type}}.encoder ({{pascalCase ../entityName}}.{{name}} entity))
+    |> object.addJson "{{name}}" ({{type}}.encoder (app.domain.{{pascalCase ../entityName}}.{{name}} entity))
 {{/if}}
 {{/each}}
 
-{{pascalCase entityName}}.decoder : '{Decoder} {{pascalCase entityName}}
-{{pascalCase entityName}}.decoder = do
+app.domain.{{pascalCase entityName}}.decoder : '{Decoder} app.domain.{{pascalCase entityName}}
+app.domain.{{pascalCase entityName}}.decoder = do
   use object at! atOptional
   decodedId = at! "id" Decoder.text
 {{#each fields}}
@@ -57,17 +57,17 @@
   decoded{{pascalCase name}} = at! "{{name}}" {{type}}.decoder
 {{/if}}
 {{/each}}
-  {{pascalCase entityName}} decodedId{{#each fields}} decoded{{pascalCase name}}{{/each}}
+  app.domain.{{pascalCase entityName}} decodedId{{#each fields}} decoded{{pascalCase name}}{{/each}}
 
-{{pascalCase entityName}}.encode : {{pascalCase entityName}} -> Text
-{{pascalCase entityName}}.encode entity = Json.toText ({{pascalCase entityName}}.encoder entity)
+app.domain.{{pascalCase entityName}}.encode : app.domain.{{pascalCase entityName}} -> Text
+app.domain.{{pascalCase entityName}}.encode entity = Json.toText (app.domain.{{pascalCase entityName}}.encoder entity)
 
-{{pascalCase entityName}}.decode : Text ->{{openBrace}}Exception} {{pascalCase entityName}}
-{{pascalCase entityName}}.decode txt = Decoder.run {{pascalCase entityName}}.decoder txt
+app.domain.{{pascalCase entityName}}.decode : Text ->{{openBrace}}Exception} app.domain.{{pascalCase entityName}}
+app.domain.{{pascalCase entityName}}.decode txt = Decoder.run app.domain.{{pascalCase entityName}}.decoder txt
 
 -- JSON round-trip test
-test> {{pascalCase entityName}}.tests.jsonRoundTrip = test.verify do
-  original = {{pascalCase entityName}} "test-123"{{#each fields}}{{#if (eq type "Text")}} "test-{{name}}"{{else if (eq type "Nat")}} 42{{else if (eq type "Int")}} +42{{else if (eq type "Float")}} 3.14{{else if (eq type "Boolean")}} true{{else if (startsWith type "Optional ")}} (Some "test"){{else if (startsWith type "[")}} ["a", "b"]{{else}} (todo "provide test value"){{/if}}{{/each}}
-  encoded = {{pascalCase entityName}}.encode original
-  decoded = {{pascalCase entityName}}.decode encoded
+test> app.domain.{{pascalCase entityName}}.tests.jsonRoundTrip = test.verify do
+  original = app.domain.{{pascalCase entityName}} "test-123"{{#each fields}}{{#if (eq type "Text")}} "test-{{name}}"{{else if (eq type "Nat")}} 42{{else if (eq type "Int")}} +42{{else if (eq type "Float")}} 3.14{{else if (eq type "Boolean")}} true{{else if (startsWith type "Optional ")}} (Some "test"){{else if (startsWith type "[")}} ["a", "b"]{{else}} (todo "provide test value"){{/if}}{{/each}}
+  encoded = app.domain.{{pascalCase entityName}}.encode original
+  decoded = app.domain.{{pascalCase entityName}}.decode encoded
   ensureEqual original decoded

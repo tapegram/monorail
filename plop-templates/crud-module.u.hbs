@@ -16,7 +16,7 @@
 -- DOMAIN TYPE
 -- =============================================================================
 
-type {{pascalCase entityName}} =
+type app.domain.{{pascalCase entityName}} =
   { id : Text
 {{#each fields}}
   , {{name}} : {{type}}
@@ -27,13 +27,13 @@ type {{pascalCase entityName}} =
 -- REPOSITORY PORT (ABILITY)
 -- =============================================================================
 
-ability {{pascalCase entityName}}Repository where
-  get     : Text ->{{openBrace}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
-  listAll : '{{openBrace}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
-  upsert  : {{pascalCase entityName}} ->{{openBrace}}{{pascalCase entityName}}Repository} ()
-  delete  : Text ->{{openBrace}}{{pascalCase entityName}}Repository} ()
+ability app.ports.{{pascalCase entityName}}Repository where
+  get     : Text ->{{openBrace}}app.ports.{{pascalCase entityName}}Repository} (Optional app.domain.{{pascalCase entityName}})
+  listAll : '{{openBrace}}app.ports.{{pascalCase entityName}}Repository} [app.domain.{{pascalCase entityName}}]
+  upsert  : app.domain.{{pascalCase entityName}} ->{{openBrace}}app.ports.{{pascalCase entityName}}Repository} ()
+  delete  : Text ->{{openBrace}}app.ports.{{pascalCase entityName}}Repository} ()
 {{#each customOperations}}
-  {{name}} : {{#if (eq inputType "()")}}'{{openBrace}}{{pascalCase ../entityName}}Repository} {{outputType}}{{else}}{{inputType}} ->{{openBrace}}{{pascalCase ../entityName}}Repository} {{outputType}}{{/if}}
+  {{name}} : {{#if (eq inputType "()")}}'{{openBrace}}app.ports.{{pascalCase ../entityName}}Repository} {{outputType}}{{else}}{{inputType}} ->{{openBrace}}app.ports.{{pascalCase ../entityName}}Repository} {{outputType}}{{/if}}
 {{/each}}
 
 -- =============================================================================
@@ -44,31 +44,32 @@ ability {{pascalCase entityName}}Repository where
 -- If you change the {{pascalCase entityName}} type, old data will still be readable
 -- as long as you handle missing fields in the decoder.
 
-storage.{{pascalCase entityName}}Repository.run :
+app.adapters.storage.{{pascalCase entityName}}Repository.run :
   Database ->
-  '{{openBrace}}g, {{pascalCase entityName}}Repository, Exception} a ->
+  '{{openBrace}}g, app.ports.{{pascalCase entityName}}Repository, Exception} a ->
   {{openBrace}}g, Remote, Exception} a
-storage.{{pascalCase entityName}}Repository.run db computation =
+app.adapters.storage.{{pascalCase entityName}}Repository.run db computation =
   -- Store as JSON text for schema evolution
   table : OrderedTable Text Text
   table = OrderedTable.named db "{{pluralize (lowercase entityName)}}" Universal.ordering
 
-  get' : Text ->{{openBrace}}g, Remote} (Optional {{pascalCase entityName}})
+  -- NOTE: get' and listAll' need Exception because decode can fail
+  get' : Text ->{{openBrace}}g, Remote, Exception} (Optional app.domain.{{pascalCase entityName}})
   get' entityId =
     match OrderedTable.tryRead table entityId with
       Optional.None -> Optional.None
-      Optional.Some json -> Optional.Some ({{pascalCase entityName}}.decode json)
+      Optional.Some json -> Optional.Some (app.domain.{{pascalCase entityName}}.decode json)
 
-  listAll' : '{{openBrace}}g, Remote} [{{pascalCase entityName}}]
+  listAll' : '{{openBrace}}g, Remote, Exception} [app.domain.{{pascalCase entityName}}]
   listAll' = do
     OrderedTable.toStream table
-      |> Stream.map (kv -> {{pascalCase entityName}}.decode (at2 kv))
+      |> Stream.map (kv -> app.domain.{{pascalCase entityName}}.decode (at2 kv))
       |> Stream.toList
 
-  upsert' : {{pascalCase entityName}} ->{{openBrace}}g, Remote} ()
+  upsert' : app.domain.{{pascalCase entityName}} ->{{openBrace}}g, Remote} ()
   upsert' entity =
-    json = {{pascalCase entityName}}.encode entity
-    OrderedTable.write table ({{pascalCase entityName}}.id entity) json
+    json = app.domain.{{pascalCase entityName}}.encode entity
+    OrderedTable.write table (app.domain.{{pascalCase entityName}}.id entity) json
 
   delete' : Text ->{{openBrace}}g, Remote} ()
   delete' entityId = OrderedTable.delete table entityId
@@ -78,24 +79,25 @@ storage.{{pascalCase entityName}}Repository.run db computation =
   {{name}}' {{#unless (eq inputType "()")}}opInput {{/unless}}= todo "Implement {{name}}"
 {{/each}}
 
-  go : '{{openBrace}}g, {{pascalCase entityName}}Repository} a -> {{openBrace}}g, Remote} a
+  -- NOTE: go needs Exception because get' and listAll' need it
+  go : '{{openBrace}}g, app.ports.{{pascalCase entityName}}Repository, Exception} a -> {{openBrace}}g, Remote, Exception} a
   go p =
     handle p()
     with cases
-      {{openBrace}} {{pascalCase entityName}}Repository.get entityId -> resume } ->
+      {{openBrace}} app.ports.{{pascalCase entityName}}Repository.get entityId -> resume } ->
         result = get' entityId
         go do resume result
-      {{openBrace}} {{pascalCase entityName}}Repository.listAll _ -> resume } ->
+      {{openBrace}} app.ports.{{pascalCase entityName}}Repository.listAll _ -> resume } ->
         result = listAll'()
         go do resume result
-      {{openBrace}} {{pascalCase entityName}}Repository.upsert entity -> resume } ->
+      {{openBrace}} app.ports.{{pascalCase entityName}}Repository.upsert entity -> resume } ->
         result = upsert' entity
         go do resume result
-      {{openBrace}} {{pascalCase entityName}}Repository.delete entityId -> resume } ->
+      {{openBrace}} app.ports.{{pascalCase entityName}}Repository.delete entityId -> resume } ->
         result = delete' entityId
         go do resume result
 {{#each customOperations}}
-      {{openBrace}} {{pascalCase ../entityName}}Repository.{{name}} {{#unless (eq inputType "()")}}opInput {{/unless}}-> resume } ->
+      {{openBrace}} app.ports.{{pascalCase ../entityName}}Repository.{{name}} {{#unless (eq inputType "()")}}opInput {{/unless}}-> resume } ->
         result = {{name}}' {{#unless (eq inputType "()")}}opInput{{/unless}}{{#if (eq inputType "()")}}(){{/if}}
         go do resume result
 {{/each}}
@@ -107,64 +109,64 @@ storage.{{pascalCase entityName}}Repository.run db computation =
 -- SERVICE
 -- =============================================================================
 
-type {{pascalCase entityName}}Service.CreateInput =
+type app.services.{{pascalCase entityName}}Service.CreateInput =
   { {{#each fields}}{{name}} : {{type}}{{#unless @last}}
   , {{/unless}}{{/each}}
   }
 
-type {{pascalCase entityName}}Service.UpdateInput =
+type app.services.{{pascalCase entityName}}Service.UpdateInput =
   { {{#each fields}}{{name}} : {{type}}{{#unless @last}}
   , {{/unless}}{{/each}}
   }
 
-{{pascalCase entityName}}Service.create :
-  {{pascalCase entityName}}Service.CreateInput ->
-  {{openBrace}}{{pascalCase entityName}}Repository, Random} {{pascalCase entityName}}
-{{pascalCase entityName}}Service.create createInput =
+app.services.{{pascalCase entityName}}Service.create :
+  app.services.{{pascalCase entityName}}Service.CreateInput ->
+  {{openBrace}}app.ports.{{pascalCase entityName}}Repository, Random} app.domain.{{pascalCase entityName}}
+app.services.{{pascalCase entityName}}Service.create createInput =
   newId = newv4() |> Uuid.toText
-  entity = {{pascalCase entityName}} newId {{#each fields}}({{pascalCase ../entityName}}Service.CreateInput.{{name}} createInput){{#unless @last}} {{/unless}}{{/each}}
-  {{pascalCase entityName}}Repository.upsert entity
+  entity = app.domain.{{pascalCase entityName}} newId {{#each fields}}(app.services.{{pascalCase ../entityName}}Service.CreateInput.{{name}} createInput){{#unless @last}} {{/unless}}{{/each}}
+  app.ports.{{pascalCase entityName}}Repository.upsert entity
   entity
 
-{{pascalCase entityName}}Service.get :
+app.services.{{pascalCase entityName}}Service.get :
   Text ->
-  {{openBrace}}{{pascalCase entityName}}Repository} (Optional {{pascalCase entityName}})
-{{pascalCase entityName}}Service.get entityId =
-  {{pascalCase entityName}}Repository.get entityId
+  {{openBrace}}app.ports.{{pascalCase entityName}}Repository} (Optional app.domain.{{pascalCase entityName}})
+app.services.{{pascalCase entityName}}Service.get entityId =
+  app.ports.{{pascalCase entityName}}Repository.get entityId
 
-{{pascalCase entityName}}Service.listAll :
-  '{{openBrace}}{{pascalCase entityName}}Repository} [{{pascalCase entityName}}]
-{{pascalCase entityName}}Service.listAll =
-  {{pascalCase entityName}}Repository.listAll
+app.services.{{pascalCase entityName}}Service.listAll :
+  '{{openBrace}}app.ports.{{pascalCase entityName}}Repository} [app.domain.{{pascalCase entityName}}]
+app.services.{{pascalCase entityName}}Service.listAll =
+  app.ports.{{pascalCase entityName}}Repository.listAll
 
-{{pascalCase entityName}}Service.update :
+app.services.{{pascalCase entityName}}Service.update :
   Text ->
-  {{pascalCase entityName}}Service.UpdateInput ->
-  {{openBrace}}{{pascalCase entityName}}Repository, Exception} {{pascalCase entityName}}
-{{pascalCase entityName}}Service.update entityId updateInput =
+  app.services.{{pascalCase entityName}}Service.UpdateInput ->
+  {{openBrace}}app.ports.{{pascalCase entityName}}Repository, Exception} app.domain.{{pascalCase entityName}}
+app.services.{{pascalCase entityName}}Service.update entityId updateInput =
   use Optional None Some
-  match {{pascalCase entityName}}Repository.get entityId with
+  match app.ports.{{pascalCase entityName}}Repository.get entityId with
     Some existing ->
-      updated = {{pascalCase entityName}} ({{pascalCase entityName}}.id existing) {{#each fields}}({{pascalCase ../entityName}}Service.UpdateInput.{{name}} updateInput){{#unless @last}} {{/unless}}{{/each}}
-      {{pascalCase entityName}}Repository.upsert updated
+      updated = app.domain.{{pascalCase entityName}} (app.domain.{{pascalCase entityName}}.id existing) {{#each fields}}(app.services.{{pascalCase ../entityName}}Service.UpdateInput.{{name}} updateInput){{#unless @last}} {{/unless}}{{/each}}
+      app.ports.{{pascalCase entityName}}Repository.upsert updated
       updated
     None ->
       Exception.raise (failure "{{pascalCase entityName}} not found" entityId)
 
-{{pascalCase entityName}}Service.delete :
+app.services.{{pascalCase entityName}}Service.delete :
   Text ->
-  {{openBrace}}{{pascalCase entityName}}Repository, Exception} ()
-{{pascalCase entityName}}Service.delete entityId =
+  {{openBrace}}app.ports.{{pascalCase entityName}}Repository, Exception} ()
+app.services.{{pascalCase entityName}}Service.delete entityId =
   use Optional None Some
-  match {{pascalCase entityName}}Repository.get entityId with
-    Some _ -> {{pascalCase entityName}}Repository.delete entityId
+  match app.ports.{{pascalCase entityName}}Repository.get entityId with
+    Some _ -> app.ports.{{pascalCase entityName}}Repository.delete entityId
     None -> Exception.raise (failure "{{pascalCase entityName}} not found" entityId)
 {{#each customOperations}}
 
-{{pascalCase ../entityName}}Service.{{name}} :
-  {{#if (eq inputType "()")}}'{{openBrace}}{{pascalCase ../entityName}}Repository} {{outputType}}{{else}}{{inputType}} ->{{openBrace}}{{pascalCase ../entityName}}Repository} {{outputType}}{{/if}}
-{{pascalCase ../entityName}}Service.{{name}} {{#unless (eq inputType "()")}}serviceInput {{/unless}}=
-  {{pascalCase ../entityName}}Repository.{{name}} {{#unless (eq inputType "()")}}serviceInput{{/unless}}
+app.services.{{pascalCase ../entityName}}Service.{{name}} :
+  {{#if (eq inputType "()")}}'{{openBrace}}app.ports.{{pascalCase ../entityName}}Repository} {{outputType}}{{else}}{{inputType}} ->{{openBrace}}app.ports.{{pascalCase ../entityName}}Repository} {{outputType}}{{/if}}
+app.services.{{pascalCase ../entityName}}Service.{{name}} {{#unless (eq inputType "()")}}serviceInput {{/unless}}=
+  app.ports.{{pascalCase ../entityName}}Repository.{{name}} {{#unless (eq inputType "()")}}serviceInput{{/unless}}
 {{/each}}
 
 -- =============================================================================
@@ -172,7 +174,7 @@ type {{pascalCase entityName}}Service.UpdateInput =
 -- =============================================================================
 
 app.routes.{{pluralize (camelCase entityName)}} :
-  '{{openBrace}}Route, Log, Exception, {{pascalCase entityName}}Repository, Random} ()
+  '{{openBrace}}Route, Log, Exception, app.ports.{{pascalCase entityName}}Repository, Random} ()
 app.routes.{{pluralize (camelCase entityName)}} =
   use Route <|>
   use Parser s
@@ -180,7 +182,7 @@ app.routes.{{pluralize (camelCase entityName)}} =
   -- GET /{{pluralize (lowercase entityName)}} - List all
   indexRoute = do
     noCapture GET (s "{{pluralize (lowercase entityName)}}")
-    items = {{pascalCase entityName}}Service.listAll ()
+    items = app.services.{{pascalCase entityName}}Service.listAll ()
     html = app.pages.{{pluralize (camelCase entityName)}}.index items ()
     ok.html ({{htmlLib}}.toText html)
 
@@ -188,8 +190,8 @@ app.routes.{{pluralize (camelCase entityName)}} =
   createRoute = do
     noCapture POST (s "{{pluralize (lowercase entityName)}}")
     formData = getFormData()
-    createInput = CreateInput {{#each fields}}({{#if (eq type "Text")}}form.getOnly! "{{name}}" formData{{else if (eq type "Nat")}}Nat.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Int")}}Int.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Float")}}Float.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Boolean")}}(form.getOnly! "{{name}}" formData == "true"){{else}}form.getOnly! "{{name}}" formData{{/if}}){{#unless @last}} {{/unless}}{{/each}}
-    created = {{pascalCase entityName}}Service.create createInput
+    createInput = app.services.{{pascalCase entityName}}Service.CreateInput {{#each fields}}({{#if (eq type "Text")}}form.getOnly! "{{name}}" formData{{else if (eq type "Nat")}}Nat.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Int")}}Int.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Float")}}Float.fromText (form.getOnly! "{{name}}" formData) |> Optional.getOrBug "Invalid {{name}}"{{else if (eq type "Boolean")}}(form.getOnly! "{{name}}" formData == "true"){{else}}form.getOnly! "{{name}}" formData{{/if}}){{#unless @last}} {{/unless}}{{/each}}
+    created = app.services.{{pascalCase entityName}}Service.create createInput
     html = app.pages.{{pluralize (camelCase entityName)}}.item created ()
     ok.html ({{htmlLib}}.toText html)
 
@@ -197,7 +199,7 @@ app.routes.{{pluralize (camelCase entityName)}} =
   showRoute = do
     entityId = route GET (s "{{pluralize (lowercase entityName)}}" Parser./ Parser.text)
     use Optional None Some
-    match {{pascalCase entityName}}Service.get entityId with
+    match app.services.{{pascalCase entityName}}Service.get entityId with
       Some entity ->
         html = app.pages.{{pluralize (camelCase entityName)}}.show entity ()
         ok.html ({{htmlLib}}.toText html)
@@ -207,7 +209,7 @@ app.routes.{{pluralize (camelCase entityName)}} =
   -- DELETE /{{pluralize (lowercase entityName)}}/:id - Delete
   destroyRoute = do
     entityId = route DELETE (s "{{pluralize (lowercase entityName)}}" Parser./ Parser.text)
-    {{pascalCase entityName}}Service.delete entityId
+    app.services.{{pascalCase entityName}}Service.delete entityId
     ok.text ""
 
   -- Order matters: more specific routes first
@@ -218,7 +220,7 @@ app.routes.{{pluralize (camelCase entityName)}} =
 -- =============================================================================
 
 app.pages.{{pluralize (camelCase entityName)}}.index :
-  [{{pascalCase entityName}}] ->
+  [app.domain.{{pascalCase entityName}}] ->
   '{{openBrace}}Route} Html
 app.pages.{{pluralize (camelCase entityName)}}.index items = do
   use {{htmlLib}} article button div form h1 li text ul
@@ -240,15 +242,15 @@ app.pages.{{pluralize (camelCase entityName)}}.index items = do
     ]
 
 app.pages.{{pluralize (camelCase entityName)}}.item :
-  {{pascalCase entityName}} ->
+  app.domain.{{pascalCase entityName}} ->
   '{{openBrace}}Route} Html
 app.pages.{{pluralize (camelCase entityName)}}.item entity = do
   use {{htmlLib}} button li span text
 
-  deleteUrl = baseUrl() Path./ "{{pluralize (lowercase entityName)}}" Path./ ({{pascalCase entityName}}.id entity) |> Path.toText
+  deleteUrl = baseUrl() Path./ "{{pluralize (lowercase entityName)}}" Path./ (app.domain.{{pascalCase entityName}}.id entity) |> Path.toText
 
   li []
-    [ span [] [text ({{pascalCase entityName}}.{{#if fields}}{{fields.[0].name}}{{else}}id{{/if}} entity)]
+    [ span [] [text (app.domain.{{pascalCase entityName}}.{{#if fields}}{{fields.[0].name}}{{else}}id{{/if}} entity)]
     , button
         [ hx_delete deleteUrl
         , hx_target "closest li"
@@ -258,7 +260,7 @@ app.pages.{{pluralize (camelCase entityName)}}.item entity = do
     ]
 
 app.pages.{{pluralize (camelCase entityName)}}.show :
-  {{pascalCase entityName}} ->
+  app.domain.{{pascalCase entityName}} ->
   '{{openBrace}}Route} Html
 app.pages.{{pluralize (camelCase entityName)}}.show entity = do
   use {{htmlLib}} article dd dl dt h1 text
@@ -267,10 +269,10 @@ app.pages.{{pluralize (camelCase entityName)}}.show entity = do
     [ h1 [] [text "{{pascalCase entityName}} Details"]
     , dl []
         [ dt [] [text "ID"]
-        , dd [] [text ({{pascalCase entityName}}.id entity)]
+        , dd [] [text (app.domain.{{pascalCase entityName}}.id entity)]
 {{#each fields}}
         , dt [] [text "{{name}}"]
-        , dd [] [text ({{#if (eq type "Text")}}{{pascalCase ../entityName}}.{{name}} entity{{else}}Debug.evalToText ({{pascalCase ../entityName}}.{{name}} entity){{/if}})]
+        , dd [] [text ({{#if (eq type "Text")}}app.domain.{{pascalCase ../entityName}}.{{name}} entity{{else}}Debug.evalToText (app.domain.{{pascalCase ../entityName}}.{{name}} entity){{/if}})]
 {{/each}}
         ]
     ]

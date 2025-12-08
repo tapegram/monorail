@@ -158,10 +158,20 @@ Follow the mode system from @.claude/skills/instructions.md:
 
 ## Code Generation Best Practices
 
-### Always Typecheck
-- After EVERY code generation
-- Before showing code to user
-- After EVERY edit
+### CRITICAL: Typecheck After EVERY Change
+
+**This is non-negotiable.** You MUST typecheck:
+- After EVERY plop generation
+- After EVERY Edit tool use
+- After EVERY Write tool use
+- Before showing ANY code to user
+
+**Why?**
+- Unison errors compound quickly
+- Small errors are easier to fix than cascading type errors
+- Users expect working code
+
+**The Rule:** Modified a `.u` file? Typecheck immediately. No batching edits.
 
 ### Always Use Templates
 Before generating code, read:
